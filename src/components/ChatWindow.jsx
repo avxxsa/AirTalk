@@ -25,14 +25,11 @@ function ChatWindow() {
     <div className="flex flex-col flex-1 p-4">
       <div className="flex-1 overflow-y-auto bg-white p-4 rounded shadow-sm">
         {messages.map((msg) => (
-          <p
-            key={msg.id}
-            className={`mb-2 text-sm ${
-              msg.sender === "You" ? "text-blue-600 text-right" : "text-gray-600"
-            }`}
-          >
-            [{msg.sender}]: {msg.text}
-          </p>
+          <MessageBubble
+          key={msg.id}
+          sender={msg.sender}
+          text={msg.text}
+        />
         ))}
       </div>
 
