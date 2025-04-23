@@ -1,7 +1,11 @@
+import Sidebar from './components/Sidebar';
+import ChatWindow from './components/ChatWindow';
+
 function App() {
   return (
-    <div className="text-3xl font-bold text-blue-600 p-6">
-      AirTalk is now Tailwind-styled 
+    <div className="flex h-screen bg-gray-100">
+      <Sidebar />
+      <ChatWindow />
     </div>
   );
 }
