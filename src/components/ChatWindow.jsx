@@ -1,10 +1,15 @@
 import { useState } from "react";
+import MessageBubble from "./MessageBubble";
 
-function ChatWindow() {
-  const [messages, setMessages] = useState([
-    { id: 1, sender: "Alisha", text: "Hello! 👋" },
-    { id: 2, sender: "You", text: "Heyyy! 😄" },
-  ]);
+function ChatWindow({ activeRoom }) {
+  const [messagesByRoom, setMessagesByRoom] = useState({
+    General: [
+      { id: 1, sender: "Alisha", text: "Hello General 👋" },
+      { id: 2, sender: "You", text: "Heyy" },
+    ],
+    "Hostel Chat": [],
+    "Classroom 207": [],
+  });
 
   const [newMessage, setNewMessage] = useState("");
 
@@ -12,24 +17,27 @@ function ChatWindow() {
     if (newMessage.trim() === "") return;
 
     const newMsg = {
-      id: messages.length + 1,
+      id: Date.now(),
       sender: "You",
       text: newMessage,
     };
 
-    setMessages([...messages, newMsg]);
+    setMessagesByRoom({
+      ...messagesByRoom,
+      [activeRoom]: [...messagesByRoom[activeRoom], newMsg],
+    });
+
     setNewMessage("");
   };
 
   return (
     <div className="flex flex-col flex-1 p-4">
+      <div className="text-sm font-semibold mb-2 text-gray-500">
+        Room: {activeRoom}
+      </div>
       <div className="flex-1 overflow-y-auto bg-white p-4 rounded shadow-sm">
-        {messages.map((msg) => (
-          <MessageBubble
-          key={msg.id}
-          sender={msg.sender}
-          text={msg.text}
-        />
+        {messagesByRoom[activeRoom].map((msg) => (
+          <MessageBubble key={msg.id} sender={msg.sender} text={msg.text} />
         ))}
       </div>
 
