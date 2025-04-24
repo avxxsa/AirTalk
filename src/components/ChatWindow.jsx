@@ -1,17 +1,19 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import MessageBubble from "./MessageBubble";
 
 function ChatWindow({ activeRoom }) {
-  const [messagesByRoom, setMessagesByRoom] = useState({
-    General: [
-      { id: 1, sender: "Alisha", text: "Hello General 👋" },
-      { id: 2, sender: "You", text: "Heyy" },
-    ],
-    "Hostel Chat": [],
-    "Classroom 207": [],
+  const [messagesByRoom, setMessagesByRoom] = useState(() => {
+    // Load from localStorage initially
+    const stored = localStorage.getItem("airtalk-messages");
+    return stored ? JSON.parse(stored) : {};
   });
 
   const [newMessage, setNewMessage] = useState("");
+
+  // Save messages to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("airtalk-messages", JSON.stringify(messagesByRoom));
+  }, [messagesByRoom]);
 
   const handleSend = () => {
     if (newMessage.trim() === "") return;
@@ -22,11 +24,12 @@ function ChatWindow({ activeRoom }) {
       text: newMessage,
     };
 
-    setMessagesByRoom({
+    const updated = {
       ...messagesByRoom,
-      [activeRoom]: [...messagesByRoom[activeRoom], newMsg],
-    });
+      [activeRoom]: [...(messagesByRoom[activeRoom] || []), newMsg],
+    };
 
+    setMessagesByRoom(updated);
     setNewMessage("");
   };
 
@@ -35,8 +38,9 @@ function ChatWindow({ activeRoom }) {
       <div className="text-sm font-semibold mb-2 text-gray-500">
         Room: {activeRoom}
       </div>
+
       <div className="flex-1 overflow-y-auto bg-white p-4 rounded shadow-sm">
-        {messagesByRoom[activeRoom].map((msg) => (
+        {(messagesByRoom[activeRoom] || []).map((msg) => (
           <MessageBubble key={msg.id} sender={msg.sender} text={msg.text} />
         ))}
       </div>
