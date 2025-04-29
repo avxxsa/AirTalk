@@ -1,12 +1,35 @@
-# React + Vite
+# KU MeshChat
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+KU MeshChat is a real-time peer-to-peer (P2P) chat platform built for students at Kathmandu University. It runs over the university's WiFi and works without internet, allowing students to send direct messages and participate in group chats securely and locally.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Real-time LAN chat (DMs + Chatrooms)
+- Peer-to-peer messaging (no central server)
+- Local storage for chat history
+- Works offline within KU's WiFi
+- Clean UI with React + Tailwind CSS
 
-## Expanding the ESLint configuration
+## Relevance
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+This project directly applies concepts from:
+- Communication & Networking (P2P, sockets)
+- Database Management Systems (IndexedDB, local storage)
+- Optional: Microprocessor (data representation & low-level logic)
+
+## Tech Stack
+
+- React.js (frontend)
+- Tailwind CSS (styling)
+- Socket.IO / WebRTC (P2P networking)
+- IndexedDB / SQLite (local message storage)
+- GitHub for version control
+
+
+## Getting Started
+
+```bash
+git clone https://github.com/YOUR-USERNAME/ku-meshchat.git
+cd ku-meshchat
+npm install
+npm run dev
