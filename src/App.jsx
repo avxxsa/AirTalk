@@ -1,15 +1,21 @@
-import { useState } from "react";
-import Sidebar from "./components/Sidebar";
-import ChatWindow from "./components/ChatWindow";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Home from "./pages/Home";
+import Join from "./pages/Join";
+import Chat from "./pages/Chat";
+import About from "./pages/About";
+import NotFound from "./pages/NotFound";
 
 function App() {
-  const [activeRoom, setActiveRoom] = useState("General");
-
   return (
-    <div className="flex h-screen bg-gray-100">
-      <Sidebar activeRoom={activeRoom} setActiveRoom={setActiveRoom} />
-      <ChatWindow activeRoom={activeRoom} />
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/join" element={<Join />} />
+        <Route path="/chat/:roomId" element={<Chat />} />
+        <Route path="/about" element={<About />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Router>
   );
 }
 
