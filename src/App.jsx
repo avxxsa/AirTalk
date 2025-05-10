@@ -1,21 +1,17 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Home from "./pages/Home";
-import Join from "./pages/Join";
-import Chat from "./pages/Chat";
-import About from "./pages/About";
-import NotFound from "./pages/NotFound";
+import { Outlet } from "react-router-dom";
+import NavBar from "./components/NavBar";
+import Footer from "./components/Footer";
+import "./index.css"; // This is your global styles
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/join" element={<Join />} />
-        <Route path="/chat/:roomId" element={<Chat />} />
-        <Route path="/about" element={<About />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </Router>
+    <div className="font-sans bg-background text-foreground min-h-screen flex flex-col">
+      <NavBar />
+      <main className="flex-grow">
+        <Outlet /> {/* Page-specific components will render here */}
+      </main>
+      <Footer />
+    </div>
   );
 }
 
