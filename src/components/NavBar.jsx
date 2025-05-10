@@ -1,84 +1,108 @@
-"use client"
+import { useState, useEffect } from "react";
+import AirTalkLogo from "./AirTalkLogo";
 
-import { useState, useEffect } from "react"
-import { Link, useLocation } from "react-router-dom"
-import AirTalkLogo from "./AirTalkLogo"
-
-const NavBar = () => {
-  const [isScrolled, setIsScrolled] = useState(false)
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const { pathname } = useLocation()
-
+const Navbar = () => {
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  // Get current path for active link styling
+  const pathname = window.location.pathname;
+  
   // Check if link is active
   const isActive = (path) => {
-    return pathname === path
-  }
+    return pathname === path;
+  };
 
   // Handle scroll event to change navbar appearance
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 10) {
-        setIsScrolled(true)
+        setIsScrolled(true);
       } else {
-        setIsScrolled(false)
+        setIsScrolled(false);
       }
-    }
+    };
 
-    window.addEventListener("scroll", handleScroll)
+    window.addEventListener("scroll", handleScroll);
     return () => {
-      window.removeEventListener("scroll", handleScroll)
-    }
-  }, [])
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
 
   return (
     <nav
       className={`fixed top-0 w-full z-50 transition-all duration-500 ${
-        isScrolled ? "bg-white shadow-sm py-3" : "bg-white py-5"
+        isScrolled ? "bg-white shadow-sm py-3" : "bg-transparent py-5"
       }`}
     >
       <div className="container mx-auto px-6 flex justify-between items-center">
         {/* Logo */}
-        <Link href="/" className="flex items-center">
-          <AirTalkLogo />
-        </Link>
+        <a href="/" className="flex items-center">
+          <AirTalkLogo isScrolled={isScrolled} />
+        </a>
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center space-x-8">
-          <Link
+          <a
             href="/"
             className={`text-xs tracking-wider uppercase transition-all duration-300 ${
-              isActive("/") ? "text-[#E5989B]" : "text-gray-600 hover:text-[#E5989B]"
+              isActive("/")
+                ? isScrolled
+                  ? "text-[#E5989B]"
+                  : "text-white font-normal"
+                : isScrolled
+                  ? "text-gray-600 hover:text-[#E5989B]"
+                  : "text-white hover:text-white/80"
             }`}
           >
             Home
-          </Link>
-          <Link
+          </a>
+          <a
             href="/rooms"
             className={`text-xs tracking-wider uppercase transition-all duration-300 ${
-              isActive("/rooms") ? "text-[#E5989B]" : "text-gray-600 hover:text-[#E5989B]"
+              isActive("/rooms")
+                ? isScrolled
+                  ? "text-[#E5989B]"
+                  : "text-white font-normal"
+                : isScrolled
+                  ? "text-gray-600 hover:text-[#E5989B]"
+                  : "text-white hover:text-white/80"
             }`}
           >
             Chatrooms
-          </Link>
-          <Link
+          </a>
+          <a
             href="/about"
             className={`text-xs tracking-wider uppercase transition-all duration-300 ${
-              isActive("/about") ? "text-[#E5989B]" : "text-gray-600 hover:text-[#E5989B]"
+              isActive("/about")
+                ? isScrolled
+                  ? "text-[#E5989B]"
+                  : "text-white font-normal"
+                : isScrolled
+                  ? "text-gray-600 hover:text-[#E5989B]"
+                  : "text-white hover:text-white/80"
             }`}
           >
             About
-          </Link>
-          <Link
+          </a>
+          <a
             href="/rooms"
-            className="text-xs tracking-wider uppercase px-5 py-2 bg-[#E5989B] text-white transition-all duration-300 hover:bg-[#d88a8d] transform hover:-translate-y-1 hover:shadow-sm"
+            className={`
+              transition-all duration-300 px-5 py-2 text-xs uppercase tracking-wider
+              ${
+                isScrolled
+                  ? "bg-[#E5989B] hover:bg-[#d88a8d] text-white"
+                  : "bg-white/20 hover:bg-white/30 text-white border border-white/50"
+              }
+            `}
           >
             Enter Chatrooms
-          </Link>
+          </a>
         </div>
 
         {/* Mobile Menu Button */}
         <button
-          className="md:hidden text-gray-700 focus:outline-none"
+          className={`md:hidden focus:outline-none ${isScrolled ? "text-gray-700" : "text-white"}`}
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         >
           {isMobileMenuOpen ? (
@@ -109,7 +133,7 @@ const NavBar = () => {
       {isMobileMenuOpen && (
         <div className="md:hidden bg-white border-t mt-2 py-4 px-6 shadow-sm">
           <div className="flex flex-col space-y-4">
-            <Link
+            <a
               href="/"
               className={`text-xs tracking-wider uppercase transition-all duration-300 ${
                 isActive("/") ? "text-[#E5989B]" : "text-gray-600 hover:text-[#E5989B]"
@@ -117,8 +141,8 @@ const NavBar = () => {
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Home
-            </Link>
-            <Link
+            </a>
+            <a
               href="/rooms"
               className={`text-xs tracking-wider uppercase transition-all duration-300 ${
                 isActive("/rooms") ? "text-[#E5989B]" : "text-gray-600 hover:text-[#E5989B]"
@@ -126,8 +150,8 @@ const NavBar = () => {
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Chatrooms
-            </Link>
-            <Link
+            </a>
+            <a
               href="/about"
               className={`text-xs tracking-wider uppercase transition-all duration-300 ${
                 isActive("/about") ? "text-[#E5989B]" : "text-gray-600 hover:text-[#E5989B]"
@@ -135,19 +159,19 @@ const NavBar = () => {
               onClick={() => setIsMobileMenuOpen(false)}
             >
               About
-            </Link>
-            <Link
+            </a>
+            <a
               href="/rooms"
-              className="text-xs tracking-wider uppercase px-5 py-2 bg-[#E5989B] text-white transition-all duration-300 hover:bg-[#d88a8d] text-center"
+              className="bg-[#E5989B] hover:bg-[#d88a8d] text-white px-5 py-2 text-xs uppercase tracking-wider transition-all duration-300 w-full text-center"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Enter Chatrooms
-            </Link>
+            </a>
           </div>
         </div>
       )}
     </nav>
-  )
-}
+  );
+};
 
-export default NavBar;
+export default Navbar;

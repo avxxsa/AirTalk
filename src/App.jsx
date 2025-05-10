@@ -1,15 +1,17 @@
-import { Outlet } from "react-router-dom";
-import NavBar from "./components/NavBar";
+import { useState, useEffect } from "react";
+import Navbar from "./components/Navbar";
+import Hero from "./components/Hero";
+import Features from "./components/Features";
+import CTA from "./components/CTA";
 import Footer from "./components/Footer";
-import "./index.css"; // This is your global styles
 
 function App() {
   return (
-    <div className="font-sans bg-background text-foreground min-h-screen flex flex-col">
-      <NavBar />
-      <main className="flex-grow">
-        <Outlet /> {/* Page-specific components will render here */}
-      </main>
+    <div className="bg-white text-gray-800 min-h-screen flex flex-col">
+      <Navbar />
+      <Hero />
+      <Features />
+      <CTA />
       <Footer />
     </div>
   );
