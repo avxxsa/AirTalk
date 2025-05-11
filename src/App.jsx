@@ -6,7 +6,7 @@ function NavLink({ href, children, className }) {
     <a 
       href={href} 
       className={clsx(
-        "text-[15px] tracking-wider hover:text-gray-800 transition-colors",
+        "text-[15px] font-light tracking-[0.15em] text-gray-400 hover:text-rose-300 transition-colors",
         className
       )}
     >
@@ -19,18 +19,18 @@ function App() {
   return (
     <div className="min-h-screen bg-brand-light">
       {/* Navigation */}
-      <nav className="px-12 py-6 flex items-center justify-between bg-white">
-        <div className="flex items-center">
-          <div className="w-10 h-10 rounded-full bg-brand-pink flex items-center justify-center">
-            <span className="text-2xl font-display">A</span>
+      <nav className="px-16 py-8 flex items-center justify-between bg-white">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-full bg-rose-200 flex items-center justify-center">
+            <span className="text-2xl font-display text-rose-400">A</span>
           </div>
-          <span className="ml-3 text-xl text-gray-800">AirTalk</span>
+          <span className="text-xl text-rose-300 font-light tracking-wider">AirTalk</span>
         </div>
-        <div className="flex items-center space-x-12">
-          <NavLink href="#" className="text-gray-500">HOME</NavLink>
-          <NavLink href="#" className="text-gray-500">CHATROOMS</NavLink>
-          <NavLink href="#" className="text-gray-500">ABOUT</NavLink>
-          <button className="bg-brand-pink text-gray-800 px-8 py-2.5 rounded-lg hover:bg-opacity-90 transition-colors tracking-wider text-[15px]">
+        <div className="flex items-center gap-16">
+          <NavLink href="#">HOME</NavLink>
+          <NavLink href="#">CHATROOMS</NavLink>
+          <NavLink href="#">ABOUT</NavLink>
+          <button className="bg-rose-200 text-rose-500 px-8 py-3 rounded-lg hover:bg-rose-300 transition-colors tracking-[0.15em] text-[15px] font-light">
             ENTER CHATROOMS
           </button>
         </div>
