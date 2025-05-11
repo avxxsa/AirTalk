@@ -1,77 +1,50 @@
-import { useEffect, useRef } from "react";
+import React from 'react';
+
+const FeatureBox = ({ icon, title, description }) => {
+  return (
+    <div className="bg-white p-8 rounded-lg shadow-lg hover:shadow-xl transition-all hover:-translate-y-1">
+      <div className="text-3xl text-[#E5989B] mb-4">{icon}</div>
+      <h3 className="text-xl font-medium mb-3 text-gray-800" style={{ fontFamily: "'Playfair Display', serif" }}>
+        {title}
+      </h3>
+      <p className="text-gray-600 text-sm leading-relaxed">
+        {description}
+      </p>
+    </div>
+  );
+};
 
 const Features = () => {
-  const featuresRef = useRef(null);
-
-  useEffect(() => {
-    // Intersection Observer for scroll animations
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.remove("opacity-0", "translate-y-8");
-            entry.target.classList.add("opacity-100", "translate-y-0");
-          }
-        });
-      },
-      { threshold: 0.1 }
-    );
-
-    if (featuresRef.current) {
-      observer.observe(featuresRef.current);
-    }
-
-    return () => {
-      if (featuresRef.current) {
-        observer.unobserve(featuresRef.current);
-      }
-    };
-  }, []);
-
   return (
-    <section
-      ref={featuresRef}
-      className="bg-white py-16 md:py-20 opacity-0 translate-y-8 transition-all duration-700 ease-out"
-    >
-      <div className="container mx-auto px-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 md:mb-16">
-          <div>
-            <h4 className="text-[#E5989B] text-sm tracking-[0.2em] uppercase mb-2 font-light">Features</h4>
-            <h2 className="text-2xl md:text-3xl font-light font-serif text-gray-800">Why Choose AirTalk</h2>
-          </div>
-          <p className="text-gray-600 max-w-md text-sm mt-4 md:mt-0">
+    <section className="py-20 bg-gray-50">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-16">
+          <h4 className="text-[#E5989B] text-sm uppercase tracking-wider mb-2">Features</h4>
+          <h2 className="text-3xl font-light text-gray-800 mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>
+            Why Choose AirTalk
+          </h2>
+          <p className="text-gray-600 max-w-lg mx-auto">
             Discover how our thoughtfully designed features enhance your campus communication experience.
           </p>
         </div>
 
+        {/* Feature Boxes in a Horizontal Row */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="group border-t border-gray-100 pt-8 transition-all duration-300 hover:border-[#E5989B] transform hover:-translate-y-2">
-            <div className="text-[#E5989B] text-xl mb-4 opacity-80 group-hover:opacity-100 transition-opacity">
-              💬
-            </div>
-            <h3 className="text-lg font-medium mb-2 text-gray-800">Offline Messaging</h3>
-            <p className="text-gray-600 text-sm leading-relaxed">
-              Chat with friends even when the internet is down, using KU's Wi-Fi network.
-            </p>
-          </div>
-          <div className="group border-t border-gray-100 pt-8 transition-all duration-300 hover:border-[#E5989B] transform hover:-translate-y-2">
-            <div className="text-[#E5989B] text-xl mb-4 opacity-80 group-hover:opacity-100 transition-opacity">
-              🔒
-            </div>
-            <h3 className="text-lg font-medium mb-2 text-gray-800">Private & Secure</h3>
-            <p className="text-gray-600 text-sm leading-relaxed">
-              Your messages stay on your device with peer-to-peer technology.
-            </p>
-          </div>
-          <div className="group border-t border-gray-100 pt-8 transition-all duration-300 hover:border-[#E5989B] transform hover:-translate-y-2">
-            <div className="text-[#E5989B] text-xl mb-4 opacity-80 group-hover:opacity-100 transition-opacity">
-              ⚡
-            </div>
-            <h3 className="text-lg font-medium mb-2 text-gray-800">Fast & Reliable</h3>
-            <p className="text-gray-600 text-sm leading-relaxed">
-              Instant messaging without delays, perfect for campus collaboration.
-            </p>
-          </div>
+          <FeatureBox 
+            icon="💬" 
+            title="Offline Messaging" 
+            description="Chat with friends even when the internet is down, using KU's Wi-Fi network."
+          />
+          <FeatureBox 
+            icon="🔒" 
+            title="Private and Secure" 
+            description="Your messages stay on your device with peer-to-peer technology."
+          />
+          <FeatureBox 
+            icon="⚡" 
+            title="Fast and Reliable" 
+            description="Instant messaging without delays, perfect for campus collaboration."
+          />
         </div>
       </div>
     </section>
