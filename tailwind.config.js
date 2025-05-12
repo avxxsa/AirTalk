@@ -1,11 +1,21 @@
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+export default {
   content: [
-    "./app/**/*.{js,ts,jsx,tsx}",
-    "./components/**/*.{js,ts,jsx,tsx}",
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        'montserrat': ['Montserrat', 'sans-serif'],
+        'playfair': ['"Playfair Display"', 'serif'],
+      },
+      colors: {
+        'pink-primary': '#E5989B',
+        'pink-secondary': '#F7C9C0',
+        'pink-dark': '#B5838D',
+      }
+    },
   },
   plugins: [],
 }

@@ -3,11 +3,11 @@ import React from 'react';
 const FeatureBox = ({ icon, title, description }) => {
   return (
     <div className="bg-white p-8 rounded-lg shadow-lg hover:shadow-xl transition-all hover:-translate-y-1">
-      <div className="text-3xl text-[#E5989B] mb-4">{icon}</div>
-      <h3 className="text-xl font-medium mb-3 text-gray-800" style={{ fontFamily: "'Playfair Display', serif" }}>
+      <div className="text-3xl text-pink-primary mb-4">{icon}</div>
+      <h3 className="text-xl font-medium mb-3 text-gray-800 font-playfair">
         {title}
       </h3>
-      <p className="text-gray-600 text-sm leading-relaxed">
+      <p className="text-gray-600 text-sm leading-relaxed font-montserrat">
         {description}
       </p>
     </div>
@@ -19,11 +19,11 @@ const Features = () => {
     <section className="py-20 bg-gray-50">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h4 className="text-[#E5989B] text-sm uppercase tracking-wider mb-2">Features</h4>
-          <h2 className="text-3xl font-light text-gray-800 mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>
+          <h4 className="text-pink-primary text-sm uppercase tracking-wider mb-2 font-montserrat">Features</h4>
+          <h2 className="text-3xl font-light text-gray-800 mb-4 font-playfair">
             Why Choose AirTalk
           </h2>
-          <p className="text-gray-600 max-w-lg mx-auto">
+          <p className="text-gray-600 max-w-lg mx-auto font-montserrat">
             Discover how our thoughtfully designed features enhance your campus communication experience.
           </p>
         </div>
