@@ -15,6 +15,7 @@ export default {
         'pink-secondary': '#F7C9C0',
         'pink-dark': '#B5838D',
       }
+
     },
   },
   plugins: [],
