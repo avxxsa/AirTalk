@@ -7,8 +7,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        'montserrat': ['Montserrat', 'sans-serif'],
-        'playfair': ['"Playfair Display"', 'serif'],
+        'sans': ['Montserrat', 'sans-serif'],
+        'serif': ['"Playfair Display"', 'serif'],
       },
       colors: {
         'pink-primary': '#E5989B',

@@ -2,12 +2,77 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom styles */
+/* Base styles */
 html, body {
   scroll-behavior: smooth;
+  font-family: 'Montserrat', sans-serif;
 }
 
-.container {
-  @apply px-4 mx-auto;
-  max-width: 1280px;
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Playfair Display', serif;
+}
+
+/* Custom Logo Font */
+.logo-text {
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  background: linear-gradient(135deg, #e5989b 0%, #b5838d 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+}
+
+/* White logo text for transparent navbar */
+.text-white.logo-text {
+  background: white;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+}
+
+/* Animation classes */
+.animate-in {
+  animation: fadeInUp 0.8s ease forwards;
+}
+
+.animate-fade-in {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Button hover effects */
+a,
+button {
+  transition: all 0.3s ease;
+}
+
+/* Hover effects for cards and interactive elements */
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
 }
