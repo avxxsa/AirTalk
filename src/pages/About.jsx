@@ -8,12 +8,12 @@ const About = () => {
     {
       name: "Avipsa Parajuli",
       role: "UI/UX Designer",
-      image: "/placeholder.svg?height=300&width=300",
+      image: "/images/avipsa.jpg",
     },
     {
       name: "Pratistha Thapa",
       role: "Database Manager",
-      image: "/placeholder.svg?height=300&width=300",
+      image: "/images/pratistha.jpg",
     },
     {
       name: "Misan Shrestha",
