@@ -23,7 +23,7 @@ const About = () => {
     {
       name: "Elvish Vaidya",
       role: "UI/UX Designer",
-      image: "/placeholder.svg?height=300&width=300",
+      image: "/images/elvish.jpg",
     },
     {
     name: "Aayusha Shrestha",
