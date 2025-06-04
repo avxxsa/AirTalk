@@ -21,7 +21,7 @@ This project directly applies concepts from:
 
 - React.js (frontend)
 - Tailwind CSS (styling)
-- Socket.IO / WebRTC (P2P networking)
+- WebSockets
 - IndexedDB / SQLite (local message storage)
 - GitHub for version control
 
@@ -29,7 +29,10 @@ This project directly applies concepts from:
 ## Getting Started
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/ku-meshchat.git
-cd ku-meshchat
+git clone https://github.com/avxxsa/AirTalk.git
+cd AirTalk
 npm install
-npm run dev
+npm run build
+node server.cjs
+
+Open browser and visit http://{your router's ip}:3000
