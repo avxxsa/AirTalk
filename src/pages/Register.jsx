@@ -38,7 +38,7 @@ const Register = () => {
         password: hashed,
       });
 
-      navigate("/login");
+      navigate("/rooms");
     } catch (err) {
       setError("Failed to register user.");
     }
