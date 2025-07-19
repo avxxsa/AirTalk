@@ -7,22 +7,20 @@ Airtalk is a real-time peer-to-peer (P2P) chat platform built for students at Ka
 - Real-time LAN chat (DMs + Chatrooms)
 - Peer-to-peer messaging (no central server)
 - Local storage for chat history
-- Works offline within KU's WiFi
 - Clean UI with React + Tailwind CSS
 
 ## Relevance
 
 This project directly applies concepts from:
 - Communication & Networking (P2P, sockets)
-- Database Management Systems (IndexedDB, local storage)
-- Optional: Microprocessor (data representation & low-level logic)
+- Database Management Systems (IndexedDB, local storage
 
 ## Tech Stack
 
 - React.js (frontend)
 - Tailwind CSS (styling)
-- Socket.IO / WebRTC (P2P networking)
-- IndexedDB / SQLite (local message storage)
+-  WebRTC (P2P networking)
+- IndexedDB 
 - GitHub for version control
 
 ## 🎯 Objectives
@@ -46,13 +44,13 @@ This project directly applies concepts from:
 
 ### Setup Steps
 
-```bash
-# Clone the repository
-git clone https://github.com/your-username/airtalk.git
-cd airtalk
 
-# Install dependencies
-npm install
+- Clone the repository
+```git clone https://github.com/your-username/airtalk.git ```
+```cd airtalk```
 
-# Run in dev mode
-npm run dev
+- Install dependencies
+```npm install```
+
+- Run in dev mode
+```npm run dev```
