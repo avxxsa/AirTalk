@@ -19,24 +19,42 @@ export const addUserToIDB = async (user) => {
   try {
     const db = await openDB();
     const tx = db.transaction("users", "readwrite");
-    tx.objectStore("users").put(user);
-    await tx.done;
+    const store = tx.objectStore("users");
+    store.put(user);
+
+    return new Promise((resolve, reject) => {
+      tx.oncomplete = () => {
+        console.log("✅ User added to IndexedDB:", user);
+        resolve(true);
+      };
+      tx.onerror = (event) => {
+        console.error("❌ Failed to add user:", event.target.error);
+        reject(event.target.error);
+      };
+    });
   } catch (error) {
     console.error("Failed to add user to IndexedDB:", error);
   }
 };
 
+
 export const getUserFromIDB = async (email) => {
   try {
     const db = await openDB();
     const tx = db.transaction("users", "readonly");
-    const user = await tx.objectStore("users").get(email);
-    return user;
+    const store = tx.objectStore("users");
+    const request = store.get(email);
+
+    return new Promise((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject("Failed to get user");
+    });
   } catch (error) {
     console.error("Failed to get user from IndexedDB:", error);
     return null;
   }
 };
+
 
 export const clearUsersFromIDB = async () => {
   try {
@@ -49,8 +67,10 @@ export const clearUsersFromIDB = async () => {
   }
 };
 
+
 export const initDB = async () => {
   try {
+    console.log("IndexedDB init triggered");
     await openDB();
     console.log("IndexedDB initialized");
   } catch (err) {

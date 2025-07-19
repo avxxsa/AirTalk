@@ -1,126 +1,91 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
+import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
+import { getUserFromIDB } from "../utils/db";
+import { useAuth } from "../context/authcontext";
 
 const Login = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    rememberMe: false,
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { login } = useAuth();
+
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
 
+  const hashPassword = async (password) => {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+    return Array.from(new Uint8Array(hashBuffer))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+  };
+
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
     setError("");
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const user = await getUserFromIDB(formData.email.trim());
+    if (!user) return setError("User not found.");
 
-    // For demo purposes, accept any login
+    const hashed = await hashPassword(formData.password.trim());
+    if (user.password !== hashed) return setError("Invalid password.");
+
+    login(user);
     navigate("/rooms");
   };
 
   return (
     <div className="bg-white text-gray-800 min-h-screen flex flex-col">
       <Navbar />
-
-      {/* Login Form */}
       <main className="flex-grow pt-24 pb-16 flex items-center justify-center">
         <div className="container mx-auto px-6">
           <div className="max-w-md mx-auto bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
             <div className="p-8">
-              <div className="text-center mb-8">
-                <h1 className="text-2xl font-medium text-gray-800 mb-2">Welcome Back</h1>
-                <p className="text-gray-600 text-sm">Sign in to continue to AirTalk</p>
-              </div>
-
-              {error && <div className="bg-red-50 text-red-700 p-3 rounded-md mb-6 text-sm">{error}</div>}
-
+              <h1 className="text-2xl font-medium mb-4">Login to AirTalk</h1>
+              {error && <div className="bg-red-100 text-red-700 p-2 rounded mb-4">{error}</div>}
               <form onSubmit={handleSubmit}>
-                <div className="mb-6">
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                    Email Address
-                  </label>
+                <div className="mb-4">
+                  <label>Email</label>
                   <input
                     type="email"
-                    id="email"
                     name="email"
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#E5989B] focus:border-[#E5989B]"
-                    placeholder="you@example.com"
+                    className="w-full px-3 py-2 border rounded"
                     value={formData.email}
                     onChange={handleChange}
                   />
                 </div>
-
                 <div className="mb-6">
-                  <div className="flex items-center justify-between mb-1">
-                    <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                      Password
-                    </label>
-                    <Link to="/forgot-password" className="text-xs text-[#E5989B] hover:text-[#d88a8d]">
-                      Forgot password?
-                    </Link>
-                  </div>
+                  <label>Password</label>
                   <input
                     type="password"
-                    id="password"
                     name="password"
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#E5989B] focus:border-[#E5989B]"
-                    placeholder="••••••••"
+                    className="w-full px-3 py-2 border rounded"
                     value={formData.password}
                     onChange={handleChange}
                   />
                 </div>
-
-                <div className="flex items-center mb-6">
-                  <input
-                    type="checkbox"
-                    id="rememberMe"
-                    name="rememberMe"
-                    className="h-4 w-4 text-[#E5989B] focus:ring-[#E5989B] border-gray-300 rounded"
-                    checked={formData.rememberMe}
-                    onChange={handleChange}
-                  />
-                  <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-700">
-                    Remember me
-                  </label>
-                </div>
-
                 <button
                   type="submit"
-                  className="w-full bg-[#E5989B] text-white py-2 px-4 rounded-md hover:bg-[#d88a8d] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#E5989B] transition-colors"
-                  disabled={isSubmitting}
+                  className="w-full bg-[#E5989B] text-white py-2 rounded hover:bg-[#d88a8d]"
                 >
-                  {isSubmitting ? "Signing in..." : "Sign In"}
+                  Sign In
                 </button>
               </form>
-
-              <div className="mt-6 text-center text-sm">
-                <span className="text-gray-600">Don't have an account?</span>{" "}
-                <Link to="/register" className="text-[#E5989B] hover:text-[#d88a8d] font-medium">
-                  Sign up
-                </Link>
-              </div>
+              <p className="text-sm mt-4">
+                Don’t have an account? <Link to="/register" className="text-[#E5989B]">Sign up</Link>
+              </p>
             </div>
           </div>
         </div>
       </main>
-
       <Footer />
     </div>
   );

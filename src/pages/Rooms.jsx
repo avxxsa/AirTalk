@@ -4,7 +4,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
 const Rooms = () => {
-  // DUMMY DATA - All chatroom data is currently populated with dummy/sample data
+  
   const [allChatrooms] = useState([
     {
       id: "general",
