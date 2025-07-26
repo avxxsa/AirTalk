@@ -1,4 +1,52 @@
- const createPeerConnection = (user) => {
+import React, { useEffect, useRef, useState } from 'react';
+import './Chat.css'; // Move styles from <style> into this file
+
+const Chat = () => {
+  const [username, setUsername] = useState('');
+  const [connected, setConnected] = useState(false);
+  const [users, setUsers] = useState([]);
+  const [currentChat, setCurrentChat] = useState(null);
+  const [message, setMessage] = useState('');
+  const socketRef = useRef(null);
+  const peers = useRef({});
+  const dataChannels = useRef({});
+  const chatContainersRef = useRef({});
+  const SIGNALING_URL = process.env.REACT_APP_SIGNALING_URL || 'ws://localhost:3000';
+
+  const inputRef = useRef();
+
+  const handleConnect = () => {
+    if (!username.trim()) return alert("Enter a username");
+    const socket = new WebSocket(SIGNALING_URL);
+    socketRef.current = socket;
+
+    socket.onopen = () => {
+      socket.send(JSON.stringify({ type: 'register', username }));
+      setConnected(true);
+    };
+
+    socket.onmessage = async (event) => {
+      const msg = JSON.parse(event.data);
+      switch (msg.type) {
+        case 'user_list':
+          setUsers(msg.users.filter(u => u !== username));
+          break;
+        case 'offer':
+          await handleOffer(msg.offer, msg.from);
+          break;
+        case 'answer':
+          await peers.current[msg.from]?.setRemoteDescription(new RTCSessionDescription(msg.answer));
+          break;
+        case 'candidate':
+          if (msg.candidate) {
+            await peers.current[msg.from]?.addIceCandidate(new RTCIceCandidate(msg.candidate));
+          }
+          break;
+      }
+    };
+  };
+
+  const createPeerConnection = (user) => {
     if (peers.current[user]) peers.current[user].close();
 
     const pc = new RTCPeerConnection({
