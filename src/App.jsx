@@ -9,6 +9,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import './index.css';
 import PrivateRoute from './components/privateroute';
+import './pages/Chat.css'
 
 function App() {
   return (

@@ -20,7 +20,8 @@ This project directly applies concepts from:
 - React.js (frontend)
 - Tailwind CSS (styling)
 -  WebRTC (P2P networking)
-- IndexedDB 
+- WebSockets
+- IndexedDB / SQLite (local message storage)
 - GitHub for version control
 
 ## 🎯 Objectives
@@ -54,3 +55,12 @@ This project directly applies concepts from:
 
 - Run in dev mode
 ```npm run dev```
+
+```bash
+git clone https://github.com/avxxsa/AirTalk.git
+cd AirTalk
+npm install
+npm run build
+node server.cjs
+
+Open browser and visit http://{your router's ip}:3000
