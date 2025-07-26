@@ -1,185 +1,191 @@
-// src/pages/ChatRoom.jsx
+import React, { useEffect, useRef, useState } from 'react';
+//import './Chat.css'; // Move styles from <style> into this file
 
-import React, { useEffect, useState, useRef } from 'react';
-
-export default function ChatRoom() {
-  const [socket, setSocket] = useState(null);
+const Chat = () => {
   const [username, setUsername] = useState('');
-  const [room, setRoom] = useState(null);
-  const [openRooms, setOpenRooms] = useState([]);
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState('');
-  const [roomCode, setRoomCode] = useState('');
-  const [creatingRoom, setCreatingRoom] = useState(false);
-  const [newRoomName, setNewRoomName] = useState('');
-  const [newRoomType, setNewRoomType] = useState('open');
+  const [connected, setConnected] = useState(false);
+  const [users, setUsers] = useState([]);
+  const [currentChat, setCurrentChat] = useState(null);
+  const [message, setMessage] = useState('');
+  const socketRef = useRef(null);
+  const peers = useRef({});
+  const dataChannels = useRef({});
+  const chatContainersRef = useRef({});
+  const SIGNALING_URL = process.env.REACT_APP_SIGNALING_URL || 'ws://localhost:3000';
 
-  const messageRef = useRef(null);
+  const inputRef = useRef();
 
-  useEffect(() => {
-    const name = prompt('Enter your name:') || 'Guest';
-    setUsername(name);
-    const ws = new WebSocket(`ws://${location.host}`);
-    ws.onopen = () => {
-      ws.send(JSON.stringify({ type: 'list' }));
+  const handleConnect = () => {
+    if (!username.trim()) return alert("Enter a username");
+    const socket = new WebSocket(SIGNALING_URL);
+    socketRef.current = socket;
+
+    socket.onopen = () => {
+      socket.send(JSON.stringify({ type: 'register', username }));
+      setConnected(true);
     };
-    ws.onmessage = (event) => {
+
+    socket.onmessage = async (event) => {
       const msg = JSON.parse(event.data);
       switch (msg.type) {
-        case 'room_list':
-          setOpenRooms(msg.rooms);
+        case 'user_list':
+          setUsers(msg.users.filter(u => u !== username));
           break;
-        case 'room_joined':
-          setRoom(msg.room);
-          if (msg.code) {
-            addMessage(`You joined private room "${msg.room}" with code: ${msg.code}`);
-          } else {
-            addMessage(`You joined room: ${msg.room}`);
+        case 'offer':
+          await handleOffer(msg.offer, msg.from);
+          break;
+        case 'answer':
+          await peers.current[msg.from]?.setRemoteDescription(new RTCSessionDescription(msg.answer));
+          break;
+        case 'candidate':
+          if (msg.candidate) {
+            await peers.current[msg.from]?.addIceCandidate(new RTCIceCandidate(msg.candidate));
           }
           break;
-        case 'chat':
-          addMessage(`[${msg.timestamp}] ${msg.user}: ${msg.text}`);
-          break;
-        case 'error':
-          alert(msg.text);
-          break;
-        default:
-          console.warn('Unknown message:', msg);
       }
     };
-    setSocket(ws);
-    return () => ws.close();
-  }, []);
-
-  useEffect(() => {
-    messageRef.current?.scrollTo(0, messageRef.current.scrollHeight);
-  }, [messages]);
-
-  const addMessage = (msg) => {
-    setMessages((prev) => [...prev, msg]);
   };
 
-  const sendMessage = () => {
-    if (input.trim()) {
-      socket.send(JSON.stringify({ type: 'chat', text: input.trim() }));
-      setInput('');
+  const createPeerConnection = (user) => {
+    if (peers.current[user]) peers.current[user].close();
+
+    const pc = new RTCPeerConnection({
+      iceServers: [
+        { urls: "stun:stun.l.google.com:19302" },
+        {
+          urls: "turn:192.168.18.13:3478",
+          username: "webrtcuser",
+          credential: "webrtcpass"
+        }
+      ]
+    });
+
+    pc.onicecandidate = ({ candidate }) => {
+      if (candidate) {
+        socketRef.current.send(JSON.stringify({ type: 'candidate', to: user, candidate }));
+      }
+    };
+
+    peers.current[user] = pc;
+    return pc;
+  };
+
+  const setupDataChannel = (user, channel) => {
+    dataChannels.current[user] = channel;
+    channel.onopen = () => {
+      setCurrentChat(user);
+    };
+    channel.onmessage = e => appendMessage(user, `${user}: ${e.data}`);
+    channel.onclose = () => appendMessage(user, `${user} disconnected`);
+  };
+
+  const startConnection = async (to) => {
+    const pc = createPeerConnection(to);
+    const dc = pc.createDataChannel("chat");
+    setupDataChannel(to, dc);
+
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    socketRef.current.send(JSON.stringify({ type: 'offer', to, offer }));
+  };
+
+  const handleOffer = async (offer, from) => {
+    const pc = createPeerConnection(from);
+    pc.ondatachannel = e => setupDataChannel(from, e.channel);
+
+    await pc.setRemoteDescription(new RTCSessionDescription(offer));
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+    socketRef.current.send(JSON.stringify({ type: 'answer', to: from, answer }));
+  };
+
+  const appendMessage = (user, msg) => {
+    const container = chatContainersRef.current[user];
+    if (container) {
+      const div = document.createElement('div');
+      div.textContent = msg;
+      container.appendChild(div);
     }
   };
 
-  const joinRoom = (name) => {
-    socket.send(JSON.stringify({ type: 'join', user: username, room: name }));
-  };
-
-  const joinWithCode = () => {
-    if (roomCode.trim()) {
-      socket.send(JSON.stringify({ type: 'join', user: username, code: roomCode.trim() }));
+  const handleSend = (e) => {
+    if (e.key === 'Enter' && message.trim() && dataChannels.current[currentChat]?.readyState === 'open') {
+      dataChannels.current[currentChat].send(message);
+      appendMessage(currentChat, `You: ${message}`);
+      setMessage('');
     }
   };
-
-  const createRoom = () => {
-    if (newRoomName.trim()) {
-      socket.send(JSON.stringify({
-        type: 'create',
-        user: username,
-        name: newRoomName.trim(),
-        isPrivate: newRoomType === 'private'
-      }));
-    }
-  };
-
-  if (!socket) return <div className="p-4">Connecting...</div>;
 
   return (
-    <div className="max-w-xl mx-auto p-4 font-sans">
-      {!room ? (
-        <>
-          <h2 className="text-2xl font-bold mb-2">Welcome, {username}</h2>
+    <div style={{ maxWidth: 700, margin: 'auto', fontFamily: 'sans-serif' }}>
+      <h2>AirTalk</h2>
+      <input
+        value={username}
+        onChange={e => setUsername(e.target.value)}
+        placeholder="Your name"
+        disabled={connected}
+      />
+      <button onClick={handleConnect} disabled={connected}>Connect</button>
 
-          <div className="mb-4">
-            <button
-              onClick={() => setCreatingRoom(!creatingRoom)}
-              className="bg-blue-600 text-white px-3 py-1 rounded"
-            >
-              {creatingRoom ? 'Cancel' : 'Create Room'}
-            </button>
-            {creatingRoom && (
-              <div className="mt-2">
-                <input
-                  className="border px-2 py-1 mr-2"
-                  placeholder="Room name"
-                  value={newRoomName}
-                  onChange={(e) => setNewRoomName(e.target.value)}
-                />
-                <select
-                  value={newRoomType}
-                  onChange={(e) => setNewRoomType(e.target.value)}
-                  className="border px-2 py-1 mr-2"
-                >
-                  <option value="open">Open</option>
-                  <option value="private">Private</option>
-                </select>
-                <button
-                  className="bg-green-600 text-white px-3 py-1 rounded"
-                  onClick={createRoom}
-                >
-                  Create
-                </button>
-              </div>
-            )}
+      <div style={{ margin: '10px 0' }}>
+        <b>Online users:</b><br />
+        {users.map(u => (
+          <div key={u}>
+            <button onClick={() => startConnection(u)}>{u}</button>
           </div>
+        ))}
+      </div>
 
-          <div className="mb-4">
-            <h3 className="font-semibold">Join Open Room:</h3>
-            {openRooms.length === 0 ? (
-              <p>No open rooms.</p>
-            ) : (
-              openRooms.map((r) => (
-                <button
-                  key={r}
-                  onClick={() => joinRoom(r)}
-                  className="block border px-3 py-1 my-1 rounded hover:bg-gray-200"
-                >
-                  {r}
-                </button>
-              ))
-            )}
-          </div>
-
-          <div>
-            <h3 className="font-semibold mb-1">Join with Code:</h3>
-            <input
-              className="border px-2 py-1 mr-2"
-              placeholder="Room code"
-              value={roomCode}
-              onChange={(e) => setRoomCode(e.target.value)}
-            />
-            <button
-              className="bg-purple-600 text-white px-3 py-1 rounded"
-              onClick={joinWithCode}
-            >
-              Join
-            </button>
-          </div>
-        </>
-      ) : (
-        <>
+      <div id="chatTabs" style={{ display: 'flex', borderBottom: '1px solid #ccc' }}>
+        {Object.keys(dataChannels.current).map(user => (
           <div
-            ref={messageRef}
-            className="border h-72 overflow-y-auto p-2 bg-gray-100 mb-2"
+            key={user}
+            className={`tab ${currentChat === user ? 'active' : ''}`}
+            style={{
+              padding: '8px',
+              cursor: 'pointer',
+              border: '1px solid #ccc',
+              marginRight: '4px',
+              borderBottom: currentChat === user ? 'none' : undefined,
+              background: currentChat === user ? '#eee' : undefined,
+              fontWeight: currentChat === user ? 'bold' : undefined
+            }}
+            onClick={() => setCurrentChat(user)}
           >
-            {messages.map((msg, i) => (
-              <div key={i}>{msg}</div>
-            ))}
+            {user}
           </div>
-          <input
-            className="border w-full px-2 py-1"
-            placeholder="Type a message..."
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+        ))}
+      </div>
+
+      <div id="chatContainers">
+        {Object.keys(dataChannels.current).map(user => (
+          <div
+            key={user}
+            className="chatWindow"
+            ref={el => (chatContainersRef.current[user] = el)}
+            style={{
+              display: currentChat === user ? 'block' : 'none',
+              height: '300px',
+              overflowY: 'auto',
+              border: '1px solid #ccc',
+              padding: '10px'
+            }}
           />
-        </>
-      )}
+        ))}
+      </div>
+
+      <input
+        ref={inputRef}
+        id="input"
+        value={message}
+        onChange={e => setMessage(e.target.value)}
+        onKeyDown={handleSend}
+        placeholder="Type a message..."
+        disabled={!currentChat}
+        style={{ width: '100%', marginTop: 10, padding: 8 }}
+      />
     </div>
   );
-}
+};
+
+export default Chat;
