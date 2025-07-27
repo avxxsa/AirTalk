@@ -11,8 +11,8 @@ const Chat = () => {
   const peers = useRef({});
   const dataChannels = useRef({});
   const chatContainersRef = useRef({});
-  const SIGNALING_URL = process.env.REACT_APP_SIGNALING_URL || 'ws://localhost:3000';
-
+const SIGNALING_URL = import.meta.env.VITE_SIGNALING_URL || 'ws://localhost:3000';
+  console.log(SIGNALING_URL);
   const inputRef = useRef();
 
   const handleConnect = () => {

@@ -2,9 +2,11 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const WebSocket = require('ws');
+const dotenv=require('dotenv');
 
+dotenv.config();
 const SIGNALING_URL = process.env.SIGNALING_URL || 'ws://localhost:3000';
-
+console.log(SIGNALING_URL);
 const server = http.createServer((req, res) => {
   let filePath = req.url === '/' ? '/index.html' : req.url;
   filePath = path.join(__dirname, 'dist', decodeURIComponent(filePath));
