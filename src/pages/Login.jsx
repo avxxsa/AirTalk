@@ -8,7 +8,7 @@ import { useAuth } from "../context/authcontext";
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const from = location.state?.from?.pathname || "/rooms";
+  const from = location.state?.from?.pathname || "/Rooms";
   const { login } = useAuth();
 
   const [formData, setFormData] = useState({ email: "", password: "" });
