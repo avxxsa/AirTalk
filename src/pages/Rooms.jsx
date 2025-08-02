@@ -129,9 +129,17 @@ const SIGNALING_URL = import.meta.env.VITE_SIGNALING_URL || 'ws://localhost:3000
 
       <div style={{ margin: '10px 0' }}>
         <b>Online users:</b><br />
+        <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '4px' }}>
+          Click on a user to start a private chat
+        </p>
         {users.map(u => (
           <div key={u}>
-            <button onClick={() => startConnection(u)}>{u}</button>
+            <button onClick={() => startConnection(u)}
+            disabled={!!dataChannels.current[u]}
+            style={{ opacity: dataChannels.current[u] ? 0.5 : 1 }}
+            >
+              {u}
+                </button>
           </div>
         ))}
       </div>

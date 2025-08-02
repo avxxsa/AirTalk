@@ -9,7 +9,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import './index.css';
 import PrivateRoute from './components/privateroute';
-import './pages/Chat.css'
+import './pages/Chat.css';
 
 function App() {
   return (
@@ -20,7 +20,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         
-        {/* ✅ Protected routes */}
+        {/* ✅ Private chat routing */}
         <Route
           path="/rooms"
           element={
@@ -46,6 +46,7 @@ function App() {
           }
         />
 
+        {/* Optional: fallback route */}
         <Route path="*" element={<Home />} />
       </Routes>
     </Router>
