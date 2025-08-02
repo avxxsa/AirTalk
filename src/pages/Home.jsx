@@ -2,8 +2,11 @@ import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import { useAuth } from '../context/authcontext'; 
 
 export default function Home() {
+  const { user } = useAuth(); // ✅ user from context
+
   const heroTitleRef = useRef(null);
   const heroSubtitleRef = useRef(null);
   const heroTextRef = useRef(null);
@@ -51,10 +54,10 @@ export default function Home() {
           </p>
           <div ref={heroButtonRef} className="opacity-0 transition-opacity duration-1000">
             <Link
-              to="/rooms"
+              to={user ? "/rooms" : "/login"}
               className="inline-block bg-white/20 hover:bg-white/30 text-white border border-white/50 px-8 py-3 text-sm md:text-base uppercase tracking-wider transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
             >
-              START A PRIVATE CHAT
+              {user ? "START A PRIVATE CHAT" : "LOGIN TO START CHAT"}
             </Link>
           </div>
         </div>
@@ -109,10 +112,10 @@ export default function Home() {
               Connect privately with fellow KU students instantly on AirTalk — no groups, no distractions.
             </p>
             <Link
-              to="/rooms"
+              to={user ? "/rooms" : "/login"}
               className="inline-block px-8 py-3 bg-[#E5989B] text-white text-xs uppercase tracking-wider hover:bg-[#d88a8d] transition-all duration-300 transform hover:-translate-y-1 hover:shadow-md"
             >
-              Start a Private Chat
+              {user ? "Start a Private Chat" : "Login to Chat"}
             </Link>
           </div>
         </div>

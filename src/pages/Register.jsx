@@ -1,11 +1,14 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { addUserToIDB } from "../utils/db";
 
 const Register = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from?.pathname || "/rooms";
+
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -38,7 +41,7 @@ const Register = () => {
         password: hashed,
       });
 
-      navigate("/rooms");
+      navigate(from, { replace: true });
     } catch (err) {
       setError("Failed to register user.");
     }
@@ -95,7 +98,10 @@ const Register = () => {
                 </button>
               </form>
               <p className="text-sm mt-4">
-                Already have an account? <Link to="/login" className="text-[#E5989B]">Sign in</Link>
+                Already have an account?{" "}
+                <Link to="/login" className="text-[#E5989B]">
+                  Sign in
+                </Link>
               </p>
             </div>
           </div>

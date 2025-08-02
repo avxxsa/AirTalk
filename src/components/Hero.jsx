@@ -1,7 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/authcontext'; 
 
 const Hero = () => {
+  const { user } = useAuth(); // 🔁 get current user
+
   return (
     <section className="relative min-h-screen flex items-center justify-center">
       {/* Background Image with Overlay */}
@@ -25,12 +28,22 @@ const Hero = () => {
         <p className="text-lg max-w-2xl mx-auto mb-10 font-montserrat">
           KU's offline-first chatroom platform made just for campus life — elegant, minimalist & smart.
         </p>
-        <Link 
-          to="/rooms" 
-          className="inline-block bg-white/20 hover:bg-white/30 text-white border border-white/50 px-8 py-3 text-sm uppercase font-medium rounded transition-all hover:-translate-y-1 hover:shadow-lg font-montserrat"
-        >
-          Start Chatting
-        </Link>
+
+        {user ? (
+          <Link 
+            to="/rooms" 
+            className="inline-block bg-white/20 hover:bg-white/30 text-white border border-white/50 px-8 py-3 text-sm uppercase font-medium rounded transition-all hover:-translate-y-1 hover:shadow-lg font-montserrat"
+          >
+            Start Chatting
+          </Link>
+        ) : (
+          <Link 
+            to="/login" 
+            className="inline-block bg-white/20 hover:bg-white/30 text-white border border-white/50 px-8 py-3 text-sm uppercase font-medium rounded transition-all hover:-translate-y-1 hover:shadow-lg font-montserrat"
+          >
+            Login to Chat
+          </Link>
+        )}
       </div>
     </section>
   );

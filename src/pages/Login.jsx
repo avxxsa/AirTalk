@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { getUserFromIDB } from "../utils/db";
@@ -7,6 +7,8 @@ import { useAuth } from "../context/authcontext";
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from?.pathname || "/rooms";
   const { login } = useAuth();
 
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -37,7 +39,8 @@ const Login = () => {
     if (user.password !== hashed) return setError("Invalid password.");
 
     login(user);
-    navigate("/rooms");
+    navigate(from, { replace: true });
+    window.location.reload(); // ✅ force reload so context is updated immediately
   };
 
   return (
@@ -48,7 +51,11 @@ const Login = () => {
           <div className="max-w-md mx-auto bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
             <div className="p-8">
               <h1 className="text-2xl font-medium mb-4">Login to AirTalk</h1>
-              {error && <div className="bg-red-100 text-red-700 p-2 rounded mb-4">{error}</div>}
+              {error && (
+                <div className="bg-red-100 text-red-700 p-2 rounded mb-4">
+                  {error}
+                </div>
+              )}
               <form onSubmit={handleSubmit}>
                 <div className="mb-4">
                   <label>Email</label>
@@ -80,7 +87,10 @@ const Login = () => {
                 </button>
               </form>
               <p className="text-sm mt-4">
-                Don’t have an account? <Link to="/register" className="text-[#E5989B]">Sign up</Link>
+                Don’t have an account?{" "}
+                <Link to="/register" className="text-[#E5989B]">
+                  Sign up
+                </Link>
               </p>
             </div>
           </div>
