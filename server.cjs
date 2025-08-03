@@ -25,13 +25,17 @@ const server = http.createServer((req, res) => {
 
   fs.readFile(filePath, extname === '.html' ? 'utf8' : null, (error, content) => {
     if (error) {
-      if (error.code === 'ENOENT') {
-        res.writeHead(404);
-        res.end('404 Not Found');
-      } else {
-        res.writeHead(500);
-        res.end('Server error: ' + error.code);
-      }
+      // SPA fallback: serve index.html
+  fs.readFile(path.join(__dirname, 'dist', 'index.html'), 'utf8', (err, fallbackContent) => {
+    if (err) {
+      res.writeHead(500);
+      res.end('Server error: ' + err.code);
+    } else {
+      const rendered = fallbackContent.replace('{{SIGNALING_URL}}', `"${SIGNALING_URL}"`);
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end(rendered, 'utf-8');
+    }
+  });
     } else {
       if (extname === '.html') {
         const rendered = content.replace('{{SIGNALING_URL}}', `"${SIGNALING_URL}"`);
