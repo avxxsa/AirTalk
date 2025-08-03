@@ -17,11 +17,11 @@ This project directly applies concepts from:
 
 ## Tech Stack
 
-- React.js (frontend)
-- Tailwind CSS (styling)
--  WebRTC (P2P networking)
+- React.js 
+- Tailwind CSS 
+-  WebRTC 
 - WebSockets
-- IndexedDB / SQLite (local message storage)
+- IndexedDB 
 - GitHub for version control
 
 ## 🎯 Objectives
