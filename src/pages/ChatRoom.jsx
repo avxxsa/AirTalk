@@ -26,7 +26,7 @@ const ChatRoom = () => {
     { id: "dark", name: "Dark Mode", class: "bg-gradient-to-b from-gray-800 to-gray-900" },
   ];
 
-  // ✅ Load messages from IndexedDB
+  // Load messages from IndexedDB
   useEffect(() => {
     const loadMessages = async () => {
       const saved = await getMessagesByRoom(id);
@@ -80,7 +80,7 @@ const ChatRoom = () => {
     setMessages(prev => [...prev, newMessage]);
     setMessageInput("");
 
-    // ✅ Save to IndexedDB
+    //  Save to IndexedDB
     await storeMessage({
       roomId: id,
       sender: newMessage.sender,

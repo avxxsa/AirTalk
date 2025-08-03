@@ -28,7 +28,7 @@ const Rooms = () => {
     if (!username.trim()) return;
 
     if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-      console.log("✅ Already connected");
+      console.log("Already connected");
       return;
     }
 
@@ -36,7 +36,7 @@ const Rooms = () => {
     socketRef.current = socket;
 
     socket.onopen = () => {
-      console.log("✅ WebSocket connected");
+      console.log(" WebSocket connected");
       socket.send(JSON.stringify({ type: 'register', username }));
       setConnected(true);
       localStorage.setItem("airtalk-username", username);
