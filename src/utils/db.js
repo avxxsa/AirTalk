@@ -1,12 +1,26 @@
+const dbName = "AirTalkDB";
+const dbVersion = 3;
 
 export const openDB = () => {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open("AirTalkDB", 1);
+    const request = indexedDB.open(dbName, dbVersion);
 
     request.onupgradeneeded = (event) => {
       const db = event.target.result;
+
       if (!db.objectStoreNames.contains("users")) {
         db.createObjectStore("users", { keyPath: "email" });
+      }
+
+      if (!db.objectStoreNames.contains("messages")) {
+        const msgStore = db.createObjectStore("messages", { keyPath: "id", autoIncrement: true });
+        msgStore.createIndex("roomId", "roomId", { unique: false });
+        msgStore.createIndex("timestamp", "timestamp", { unique: false });
+      }
+
+      if (!db.objectStoreNames.contains("pending")) {
+        const pending = db.createObjectStore("pending", { keyPath: "id", autoIncrement: true });
+        pending.createIndex("roomId", "roomId", { unique: false });
       }
     };
 
@@ -37,7 +51,6 @@ export const addUserToIDB = async (user) => {
   }
 };
 
-
 export const getUserFromIDB = async (email) => {
   try {
     const db = await openDB();
@@ -55,7 +68,6 @@ export const getUserFromIDB = async (email) => {
   }
 };
 
-
 export const clearUsersFromIDB = async () => {
   try {
     const db = await openDB();
@@ -67,7 +79,6 @@ export const clearUsersFromIDB = async () => {
   }
 };
 
-
 export const initDB = async () => {
   try {
     console.log("IndexedDB init triggered");
@@ -78,3 +89,90 @@ export const initDB = async () => {
   }
 };
 
+export const storeMessage = async ({ roomId, sender, content, timestamp }) => {
+  try {
+    const db = await openDB();
+    const tx = db.transaction("messages", "readwrite");
+    const store = tx.objectStore("messages");
+
+    store.add({
+      roomId,
+      sender,
+      content,
+      timestamp: timestamp || new Date().toISOString(),
+    });
+
+    return new Promise((resolve, reject) => {
+      tx.oncomplete = () => {
+        console.log("💾 Message stored:", { roomId, sender, content });
+        resolve(true);
+      };
+      tx.onerror = (e) => {
+        console.error("❌ Failed to store message:", e.target.error);
+        reject(e.target.error);
+      };
+    });
+  } catch (err) {
+    console.error("❌ Error in storeMessage:", err);
+    return false;
+  }
+};
+
+export const getMessagesByRoom = async (roomId) => {
+  try {
+    const db = await openDB();
+    const tx = db.transaction("messages", "readonly");
+    const store = tx.objectStore("messages");
+    const index = store.index("roomId");
+
+    const request = index.getAll(IDBKeyRange.only(roomId));
+
+    return new Promise((resolve, reject) => {
+      request.onsuccess = () => {
+        const messages = request.result.sort((a, b) =>
+          new Date(a.timestamp) - new Date(b.timestamp)
+        );
+        resolve(messages);
+      };
+      request.onerror = () => reject("Failed to get messages");
+    });
+  } catch (err) {
+    console.error("❌ Error in getMessagesByRoom:", err);
+    return [];
+  }
+};
+
+export const queuePendingMessage = async ({ roomId, content }) => {
+  const db = await openDB();
+  const tx = db.transaction("pending", "readwrite");
+  tx.objectStore("pending").add({ roomId, content, timestamp: new Date().toISOString() });
+};
+
+export const getPendingMessages = async (roomId) => {
+  const db = await openDB();
+  const tx = db.transaction("pending", "readonly");
+  const store = tx.objectStore("pending");
+  const index = store.index("roomId");
+
+  return new Promise((resolve, reject) => {
+    const req = index.getAll(IDBKeyRange.only(roomId));
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject("Failed to fetch pending messages");
+  });
+};
+
+export const clearPendingMessages = async (roomId) => {
+  const db = await openDB();
+  const tx = db.transaction("pending", "readwrite");
+  const store = tx.objectStore("pending");
+  const index = store.index("roomId");
+
+  const cursorReq = index.openCursor(IDBKeyRange.only(roomId));
+  cursorReq.onsuccess = (e) => {
+    const cursor = e.target.result;
+    if (cursor) {
+      cursor.delete();
+      cursor.continue();
+    }
+  };
+};

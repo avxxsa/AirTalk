@@ -2,6 +2,13 @@ import React, { useEffect, useRef, useState } from 'react';
 import './Chat.css';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import {
+  queuePendingMessage,
+  getPendingMessages,
+  clearPendingMessages,
+  getMessagesByRoom,
+  storeMessage
+} from '../utils/db';
 
 const Rooms = () => {
   const [username, setUsername] = useState('');
@@ -14,16 +21,28 @@ const Rooms = () => {
   const dataChannels = useRef({});
   const chatContainersRef = useRef({});
   const SIGNALING_URL = import.meta.env.VITE_SIGNALING_URL || 'ws://localhost:3000';
+
   const inputRef = useRef();
 
   const handleConnect = () => {
-    if (!username.trim()) return alert("Enter a username");
+    if (!username.trim()) return;
+
+    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+      console.log("✅ Already connected");
+      return;
+    }
+
     const socket = new WebSocket(SIGNALING_URL);
     socketRef.current = socket;
 
     socket.onopen = () => {
+      console.log("✅ WebSocket connected");
       socket.send(JSON.stringify({ type: 'register', username }));
       setConnected(true);
+      localStorage.setItem("airtalk-username", username);
+
+      peers.current = {};
+      dataChannels.current = {};
     };
 
     socket.onmessage = async (event) => {
@@ -73,9 +92,44 @@ const Rooms = () => {
 
   const setupDataChannel = (user, channel) => {
     dataChannels.current[user] = channel;
-    channel.onopen = () => setCurrentChat(user);
-    channel.onmessage = e => appendMessage(user, `${user}: ${e.data}`);
-    channel.onclose = () => appendMessage(user, `${user} disconnected`);
+
+    channel.onopen = async () => {
+      setCurrentChat(user);
+      localStorage.setItem("currentChat", user);
+
+      const history = await getMessagesByRoom(user);
+      for (const msg of history) {
+        appendMessage(user, `${msg.sender}: ${msg.content}`);
+      }
+
+      appendMessage(user, `[System]: Connected to ${user}`);
+
+      const pending = await getPendingMessages(user);
+      for (const msg of pending) {
+        channel.send(msg.content);
+        appendMessage(user, `You (sent later): ${msg.content}`);
+      }
+
+      if (pending.length > 0) {
+        await clearPendingMessages(user);
+      }
+    };
+
+    channel.onmessage = async (e) => {
+      setCurrentChat(user);
+      localStorage.setItem("currentChat", user);
+
+      appendMessage(user, `${user}: ${e.data}`);
+
+      await storeMessage({
+        roomId: user,
+        sender: user,
+        content: e.data,
+        timestamp: new Date()
+      });
+    };
+
+    channel.onclose = () => appendMessage(user, `[System]: ${user} disconnected`);
   };
 
   const startConnection = async (to) => {
@@ -107,13 +161,41 @@ const Rooms = () => {
     }
   };
 
-  const handleSend = (e) => {
-    if (e.key === 'Enter' && message.trim() && dataChannels.current[currentChat]?.readyState === 'open') {
-      dataChannels.current[currentChat].send(message);
+  const handleSend = async (e) => {
+    if (e.key === 'Enter' && message.trim()) {
+      const channel = dataChannels.current[currentChat];
       appendMessage(currentChat, `You: ${message}`);
+
+      if (channel?.readyState === 'open') {
+        channel.send(message);
+      } else {
+        await queuePendingMessage({ roomId: currentChat, content: message });
+      }
+
+      await storeMessage({
+        roomId: currentChat,
+        sender: username,
+        content: message,
+        timestamp: new Date()
+      });
+
       setMessage('');
     }
   };
+
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    const savedChat = localStorage.getItem("currentChat");
+
+    if (storedUser?.fullName) {
+      setUsername(storedUser.fullName);
+      setTimeout(() => handleConnect(), 300);
+    }
+
+    if (savedChat) {
+      setCurrentChat(savedChat);
+    }
+  }, []);
 
   return (
     <div className="bg-white text-gray-800 min-h-screen flex flex-col">
@@ -124,10 +206,8 @@ const Rooms = () => {
           <h2 className="text-2xl font-semibold mb-4">AirTalk</h2>
           <input
             value={username}
-            onChange={e => setUsername(e.target.value)}
-            placeholder="Your name"
-            disabled={connected}
-            className="w-full border border-gray-300 px-4 py-2 rounded mb-2"
+            disabled
+            className="w-full border border-gray-300 px-4 py-2 rounded mb-2 bg-gray-100"
           />
           <button
             onClick={handleConnect}
@@ -143,7 +223,11 @@ const Rooms = () => {
             {users.map(u => (
               <div key={u}>
                 <button
-                  onClick={() => startConnection(u)}
+                  onClick={() => {
+                    startConnection(u);
+                    setCurrentChat(u);
+                    localStorage.setItem("currentChat", u);
+                  }}
                   disabled={!!dataChannels.current[u]}
                   style={{ opacity: dataChannels.current[u] ? 0.5 : 1 }}
                   className="bg-gray-100 hover:bg-gray-200 px-4 py-1 rounded mb-1 text-sm"
@@ -161,7 +245,20 @@ const Rooms = () => {
                 className={`cursor-pointer px-4 py-2 border border-gray-300 mr-2 rounded-t ${
                   currentChat === user ? 'bg-gray-200 font-bold' : ''
                 }`}
-                onClick={() => setCurrentChat(user)}
+                onClick={() => {
+                  (async () => {
+                    setCurrentChat(user);
+                    localStorage.setItem("currentChat", user);
+
+                    const container = chatContainersRef.current[user];
+                    if (container && container.childElementCount === 0) {
+                      const history = await getMessagesByRoom(user);
+                      history.forEach(msg => {
+                        appendMessage(user, `${msg.sender}: ${msg.content}`);
+                      });
+                    }
+                  })();
+                }}
               >
                 {user}
               </div>
@@ -169,23 +266,26 @@ const Rooms = () => {
           </div>
 
           <div id="chatContainers" className="mb-4">
-            {Object.keys(dataChannels.current).map(user => (
-              <div
-                key={user}
-                className="chatWindow"
-                ref={el => (chatContainersRef.current[user] = el)}
-                style={{
-                  display: currentChat === user ? 'block' : 'none',
-                  height: '300px',
-                  overflowY: 'auto',
-                  border: '1px solid #ccc',
-                  padding: '10px',
-                  marginBottom: '1rem',
-                  background: '#fafafa',
-                  borderRadius: '4px'
-                }}
-              />
-            ))}
+            {Object.keys(dataChannels.current)
+              .concat(currentChat || [])
+              .filter((v, i, a) => a.indexOf(v) === i)
+              .map(user => (
+                <div
+                  key={user}
+                  className="chatWindow"
+                  ref={el => (chatContainersRef.current[user] = el)}
+                  style={{
+                    display: currentChat === user ? 'block' : 'none',
+                    height: '300px',
+                    overflowY: 'auto',
+                    border: '1px solid #ccc',
+                    padding: '10px',
+                    marginBottom: '1rem',
+                    background: '#fafafa',
+                    borderRadius: '4px'
+                  }}
+                />
+              ))}
           </div>
 
           <input

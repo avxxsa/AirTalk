@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
+import { storeMessage, getMessagesByRoom } from "../utils/db"; // ✅ import IndexedDB helpers
 
 const ChatRoom = () => {
   const { id } = useParams();
@@ -25,33 +26,45 @@ const ChatRoom = () => {
     { id: "dark", name: "Dark Mode", class: "bg-gradient-to-b from-gray-800 to-gray-900" },
   ];
 
+  // ✅ Load messages from IndexedDB
   useEffect(() => {
-    const initialMessages = [
-      {
-        id: "1",
-        sender: chattingWith,
-        content: "Hey! Ready to chat?",
-        timestamp: new Date(Date.now() - 300000),
-        isCurrentUser: false,
-        avatar: "/placeholder.svg"
-      },
-      {
-        id: "2",
-        sender: currentUser,
-        content: "Yes! Let’s get started.",
-        timestamp: new Date(Date.now() - 200000),
-        isCurrentUser: true,
-        avatar: "/placeholder.svg"
-      },
-    ];
-    setMessages(initialMessages);
+    const loadMessages = async () => {
+      const saved = await getMessagesByRoom(id);
+      if (saved.length) {
+        setMessages(saved);
+      } else {
+        const initialMessages = [
+          {
+            id: "1",
+            sender: chattingWith,
+            content: "Hey! Ready to chat?",
+            timestamp: new Date(Date.now() - 300000),
+            isCurrentUser: false,
+            avatar: "/placeholder.svg"
+          },
+          {
+            id: "2",
+            sender: currentUser,
+            content: "Yes! Let’s get started.",
+            timestamp: new Date(Date.now() - 200000),
+            isCurrentUser: true,
+            avatar: "/placeholder.svg"
+          },
+        ];
+        setMessages(initialMessages);
+        for (const m of initialMessages) {
+          await storeMessage({ roomId: id, sender: m.sender, content: m.content, timestamp: m.timestamp });
+        }
+      }
+    };
+    loadMessages();
   }, [id]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSendMessage = (e) => {
+  const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!messageInput.trim()) return;
 
@@ -64,17 +77,20 @@ const ChatRoom = () => {
       avatar: "/placeholder.svg",
     };
 
-    setMessages([...messages, newMessage]);
+    setMessages(prev => [...prev, newMessage]);
     setMessageInput("");
+
+    // ✅ Save to IndexedDB
+    await storeMessage({
+      roomId: id,
+      sender: newMessage.sender,
+      content: newMessage.content,
+      timestamp: newMessage.timestamp,
+    });
   };
 
-  const formatTime = (date) => date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-
-  const getCurrentBackgroundClass = () => {
-    const bg = backgroundOptions.find((bg) => bg.id === chatBackground);
-    return bg ? bg.class : "bg-gray-50";
-  };
-
+  const formatTime = (date) => new Date(date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const getCurrentBackgroundClass = () => backgroundOptions.find((bg) => bg.id === chatBackground)?.class || "bg-gray-50";
   const isDarkMode = chatBackground === "dark";
 
   return (
@@ -118,22 +134,17 @@ const ChatRoom = () => {
           )}
 
           {/* Chat Area */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 flex flex-col justify-end scroll-smooth transition-all ease-in-out duration-300 shadow-inner rounded-b-md border-t border-gray-100 sm:rounded-t-none sm:border-none sm:shadow-none sm:p-6 sm:pt-4 sm:pb-20 md:pt-6 md:pb-28 lg:pb-32 xl:pb-36 2xl:pb-40">
+          <div className={`flex-1 overflow-y-auto p-4 space-y-4 flex flex-col justify-end ${getCurrentBackgroundClass()} scroll-smooth`}>
             {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex ${msg.isCurrentUser ? "justify-end" : "justify-start"}`}
-              >
+              <div key={msg.id} className={`flex ${msg.isCurrentUser ? "justify-end" : "justify-start"}`}>
                 <div className="max-w-xs lg:max-w-md">
-                  <div
-                    className={`text-sm p-3 rounded-lg shadow-sm ${
-                      msg.isCurrentUser
-                        ? "bg-[#E5989B] text-white rounded-br-none"
-                        : isDarkMode
-                        ? "bg-gray-700 text-white rounded-bl-none"
-                        : "bg-white text-gray-800 rounded-bl-none"
-                    }`}
-                  >
+                  <div className={`text-sm p-3 rounded-lg shadow-sm ${
+                    msg.isCurrentUser
+                      ? "bg-[#E5989B] text-white rounded-br-none"
+                      : isDarkMode
+                      ? "bg-gray-700 text-white rounded-bl-none"
+                      : "bg-white text-gray-800 rounded-bl-none"
+                  }`}>
                     {msg.content}
                   </div>
                   <div className={`text-xs mt-1 ${isDarkMode ? "text-gray-300" : "text-gray-500"}`}>
