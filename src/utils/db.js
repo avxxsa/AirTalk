@@ -1,35 +1,33 @@
+const dbName = "AirTalkDB";
+const dbVersion = 3;
 
 export const openDB = () => {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open("AirTalkDB", 3); // ⬅️ bump version
+    const request = indexedDB.open(dbName, dbVersion);
 
-request.onupgradeneeded = (event) => {
-  const db = event.target.result;
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
 
-  // existing stores...
-  if (!db.objectStoreNames.contains("users")) {
-    db.createObjectStore("users", { keyPath: "email" });
-  }
+      if (!db.objectStoreNames.contains("users")) {
+        db.createObjectStore("users", { keyPath: "email" });
+      }
 
-  if (!db.objectStoreNames.contains("messages")) {
-    const msgStore = db.createObjectStore("messages", { keyPath: "id", autoIncrement: true });
-    msgStore.createIndex("roomId", "roomId", { unique: false });
-    msgStore.createIndex("timestamp", "timestamp", { unique: false });
-  }
+      if (!db.objectStoreNames.contains("messages")) {
+        const msgStore = db.createObjectStore("messages", { keyPath: "id", autoIncrement: true });
+        msgStore.createIndex("roomId", "roomId", { unique: false });
+        msgStore.createIndex("timestamp", "timestamp", { unique: false });
+      }
 
-  // ✅ NEW: pending messages store
-  if (!db.objectStoreNames.contains("pending")) {
-    const pending = db.createObjectStore("pending", { keyPath: "id", autoIncrement: true });
-    pending.createIndex("roomId", "roomId", { unique: false });
-  }
-};
-
+      if (!db.objectStoreNames.contains("pending")) {
+        const pending = db.createObjectStore("pending", { keyPath: "id", autoIncrement: true });
+        pending.createIndex("roomId", "roomId", { unique: false });
+      }
+    };
 
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
   });
 };
-
 
 export const addUserToIDB = async (user) => {
   try {
@@ -53,7 +51,6 @@ export const addUserToIDB = async (user) => {
   }
 };
 
-
 export const getUserFromIDB = async (email) => {
   try {
     const db = await openDB();
@@ -71,7 +68,6 @@ export const getUserFromIDB = async (email) => {
   }
 };
 
-
 export const clearUsersFromIDB = async () => {
   try {
     const db = await openDB();
@@ -82,7 +78,6 @@ export const clearUsersFromIDB = async () => {
     console.error("Failed to clear users from IndexedDB:", error);
   }
 };
-
 
 export const initDB = async () => {
   try {

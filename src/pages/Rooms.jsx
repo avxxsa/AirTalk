@@ -5,7 +5,9 @@ import Footer from '../components/Footer';
 import {
   queuePendingMessage,
   getPendingMessages,
-  clearPendingMessages
+  clearPendingMessages,
+  getMessagesByRoom,
+  storeMessage
 } from '../utils/db';
 
 const Rooms = () => {
@@ -24,7 +26,6 @@ const Rooms = () => {
 
   const handleConnect = () => {
     if (!username.trim()) return;
-
 
     if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
       console.log("✅ Already connected");
@@ -95,6 +96,12 @@ const Rooms = () => {
     channel.onopen = async () => {
       setCurrentChat(user);
       localStorage.setItem("currentChat", user);
+
+      const history = await getMessagesByRoom(user);
+      for (const msg of history) {
+        appendMessage(user, `${msg.sender}: ${msg.content}`);
+      }
+
       appendMessage(user, `[System]: Connected to ${user}`);
 
       const pending = await getPendingMessages(user);
@@ -102,12 +109,26 @@ const Rooms = () => {
         channel.send(msg.content);
         appendMessage(user, `You (sent later): ${msg.content}`);
       }
+
       if (pending.length > 0) {
         await clearPendingMessages(user);
       }
     };
 
-    channel.onmessage = e => appendMessage(user, `${user}: ${e.data}`);
+    channel.onmessage = async (e) => {
+      setCurrentChat(user);
+      localStorage.setItem("currentChat", user);
+
+      appendMessage(user, `${user}: ${e.data}`);
+
+      await storeMessage({
+        roomId: user,
+        sender: user,
+        content: e.data,
+        timestamp: new Date()
+      });
+    };
+
     channel.onclose = () => appendMessage(user, `[System]: ${user} disconnected`);
   };
 
@@ -151,6 +172,13 @@ const Rooms = () => {
         await queuePendingMessage({ roomId: currentChat, content: message });
       }
 
+      await storeMessage({
+        roomId: currentChat,
+        sender: username,
+        content: message,
+        timestamp: new Date()
+      });
+
       setMessage('');
     }
   };
@@ -160,7 +188,7 @@ const Rooms = () => {
     const savedChat = localStorage.getItem("currentChat");
 
     if (storedUser?.fullName) {
-      setUsername(storedUser.fullName); // ✅ use fullName instead of email
+      setUsername(storedUser.fullName);
       setTimeout(() => handleConnect(), 300);
     }
 
@@ -218,8 +246,18 @@ const Rooms = () => {
                   currentChat === user ? 'bg-gray-200 font-bold' : ''
                 }`}
                 onClick={() => {
-                  setCurrentChat(user);
-                  localStorage.setItem("currentChat", user);
+                  (async () => {
+                    setCurrentChat(user);
+                    localStorage.setItem("currentChat", user);
+
+                    const container = chatContainersRef.current[user];
+                    if (container && container.childElementCount === 0) {
+                      const history = await getMessagesByRoom(user);
+                      history.forEach(msg => {
+                        appendMessage(user, `${msg.sender}: ${msg.content}`);
+                      });
+                    }
+                  })();
                 }}
               >
                 {user}
@@ -228,23 +266,26 @@ const Rooms = () => {
           </div>
 
           <div id="chatContainers" className="mb-4">
-            {Object.keys(dataChannels.current).map(user => (
-              <div
-                key={user}
-                className="chatWindow"
-                ref={el => (chatContainersRef.current[user] = el)}
-                style={{
-                  display: currentChat === user ? 'block' : 'none',
-                  height: '300px',
-                  overflowY: 'auto',
-                  border: '1px solid #ccc',
-                  padding: '10px',
-                  marginBottom: '1rem',
-                  background: '#fafafa',
-                  borderRadius: '4px'
-                }}
-              />
-            ))}
+            {Object.keys(dataChannels.current)
+              .concat(currentChat || [])
+              .filter((v, i, a) => a.indexOf(v) === i)
+              .map(user => (
+                <div
+                  key={user}
+                  className="chatWindow"
+                  ref={el => (chatContainersRef.current[user] = el)}
+                  style={{
+                    display: currentChat === user ? 'block' : 'none',
+                    height: '300px',
+                    overflowY: 'auto',
+                    border: '1px solid #ccc',
+                    padding: '10px',
+                    marginBottom: '1rem',
+                    background: '#fafafa',
+                    borderRadius: '4px'
+                  }}
+                />
+              ))}
           </div>
 
           <input
