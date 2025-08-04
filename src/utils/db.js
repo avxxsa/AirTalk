@@ -1,5 +1,5 @@
 const dbName = "AirTalkDB";
-const dbVersion = 3;
+const dbVersion = 4; // 🔁 bump version to force upgrade
 
 export const openDB = () => {
   return new Promise((resolve, reject) => {
@@ -12,16 +12,18 @@ export const openDB = () => {
         db.createObjectStore("users", { keyPath: "email" });
       }
 
-      if (!db.objectStoreNames.contains("messages")) {
-        const msgStore = db.createObjectStore("messages", { keyPath: "id", autoIncrement: true });
-        msgStore.createIndex("roomId", "roomId", { unique: false });
-        msgStore.createIndex("timestamp", "timestamp", { unique: false });
+      if (db.objectStoreNames.contains("messages")) {
+        db.deleteObjectStore("messages"); // 🔁 force clean corrupted stores
       }
+      const msgStore = db.createObjectStore("messages", { keyPath: "id", autoIncrement: true });
+      msgStore.createIndex("roomId", "roomId", { unique: false });
+      msgStore.createIndex("timestamp", "timestamp", { unique: false });
 
-      if (!db.objectStoreNames.contains("pending")) {
-        const pending = db.createObjectStore("pending", { keyPath: "id", autoIncrement: true });
-        pending.createIndex("roomId", "roomId", { unique: false });
+      if (db.objectStoreNames.contains("pending")) {
+        db.deleteObjectStore("pending");
       }
+      const pending = db.createObjectStore("pending", { keyPath: "id", autoIncrement: true });
+      pending.createIndex("roomId", "roomId", { unique: false });
     };
 
     request.onsuccess = () => resolve(request.result);
@@ -47,7 +49,7 @@ export const addUserToIDB = async (user) => {
       };
     });
   } catch (error) {
-    console.error("Failed to add user to IndexedDB:", error);
+    console.error("❌ Failed to add user to IndexedDB:", error);
   }
 };
 
@@ -63,7 +65,7 @@ export const getUserFromIDB = async (email) => {
       request.onerror = () => reject("Failed to get user");
     });
   } catch (error) {
-    console.error("Failed to get user from IndexedDB:", error);
+    console.error("❌ Failed to get user from IndexedDB:", error);
     return null;
   }
 };
@@ -75,7 +77,7 @@ export const clearUsersFromIDB = async () => {
     await tx.objectStore("users").clear();
     await tx.done;
   } catch (error) {
-    console.error("Failed to clear users from IndexedDB:", error);
+    console.error("❌ Failed to clear users from IndexedDB:", error);
   }
 };
 
@@ -83,9 +85,9 @@ export const initDB = async () => {
   try {
     console.log("IndexedDB init triggered");
     await openDB();
-    console.log("IndexedDB initialized");
+    console.log("✅ IndexedDB initialized");
   } catch (err) {
-    console.error("Failed to initialize IndexedDB:", err);
+    console.error("❌ Failed to initialize IndexedDB:", err);
   }
 };
 
@@ -96,6 +98,7 @@ export const storeMessage = async ({ roomId, sender, content, timestamp }) => {
     const store = tx.objectStore("messages");
 
     store.add({
+      id: Date.now(), // 🔁 explicit id to avoid DataError
       roomId,
       sender,
       content,
@@ -123,8 +126,13 @@ export const getMessagesByRoom = async (roomId) => {
     const db = await openDB();
     const tx = db.transaction("messages", "readonly");
     const store = tx.objectStore("messages");
-    const index = store.index("roomId");
 
+    if (!store.indexNames.contains("roomId")) {
+      console.error("❌ roomId index not found in messages store");
+      return [];
+    }
+
+    const index = store.index("roomId");
     const request = index.getAll(IDBKeyRange.only(roomId));
 
     return new Promise((resolve, reject) => {
@@ -145,15 +153,25 @@ export const getMessagesByRoom = async (roomId) => {
 export const queuePendingMessage = async ({ roomId, content }) => {
   const db = await openDB();
   const tx = db.transaction("pending", "readwrite");
-  tx.objectStore("pending").add({ roomId, content, timestamp: new Date().toISOString() });
+  tx.objectStore("pending").add({
+    id: Date.now(),
+    roomId,
+    content,
+    timestamp: new Date().toISOString(),
+  });
 };
 
 export const getPendingMessages = async (roomId) => {
   const db = await openDB();
   const tx = db.transaction("pending", "readonly");
   const store = tx.objectStore("pending");
-  const index = store.index("roomId");
 
+  if (!store.indexNames.contains("roomId")) {
+    console.error("❌ roomId index missing in pending store");
+    return [];
+  }
+
+  const index = store.index("roomId");
   return new Promise((resolve, reject) => {
     const req = index.getAll(IDBKeyRange.only(roomId));
     req.onsuccess = () => resolve(req.result);
@@ -165,8 +183,13 @@ export const clearPendingMessages = async (roomId) => {
   const db = await openDB();
   const tx = db.transaction("pending", "readwrite");
   const store = tx.objectStore("pending");
-  const index = store.index("roomId");
 
+  if (!store.indexNames.contains("roomId")) {
+    console.warn("⚠️ No roomId index in pending store, skipping clear.");
+    return;
+  }
+
+  const index = store.index("roomId");
   const cursorReq = index.openCursor(IDBKeyRange.only(roomId));
   cursorReq.onsuccess = (e) => {
     const cursor = e.target.result;
