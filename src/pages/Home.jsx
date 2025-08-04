@@ -5,7 +5,7 @@ import Footer from '../components/Footer';
 import { useAuth } from '../context/authcontext'; 
 
 export default function Home() {
-  const { user } = useAuth(); // ✅ user from context
+  const { user } = useAuth(); // user from context
 
   const heroTitleRef = useRef(null);
   const heroSubtitleRef = useRef(null);
