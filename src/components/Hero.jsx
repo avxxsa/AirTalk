@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/authcontext'; 
 
 const Hero = () => {
-  const { user } = useAuth(); // 🔁 get current user
+  const { user } = useAuth(); // get current user
 
   return (
     <section className="relative min-h-screen flex items-center justify-center">
