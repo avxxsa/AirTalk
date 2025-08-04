@@ -298,17 +298,25 @@ const Rooms = () => {
               />
             ))}
           </div>
-
-          <input
-            ref={inputRef}
-            id="input"
-            value={message}
-            onChange={e => setMessage(e.target.value)}
-            onKeyDown={handleSend}
-            placeholder="Type a message..."
-            disabled={!currentChat}
-            className="w-full border border-gray-300 px-4 py-2 rounded"
-          />
+           <div className="flex items-center gap-2">
+            <input
+              ref={inputRef}
+              id="input"
+              value={message}
+              onChange={e => setMessage(e.target.value)}
+              onKeyDown={handleSend}
+              placeholder="Type a message..."
+              disabled={!currentChat}
+              className="flex-1 border border-gray-300 px-4 py-2 rounded-full focus:outline-none focus:ring-1 focus:ring-[#E5989B] focus:border-[#E5989B]"
+            />
+             <button
+              onClick={() => handleSend({ key: 'Enter' })}
+              disabled={!message.trim()}
+              className="px-4 py-2 rounded-full bg-[#E5989B] text-white hover:bg-[#d88a8d] focus:outline-none"
+            >
+              Send
+            </button>
+          </div>
         </div>
       </main>
 

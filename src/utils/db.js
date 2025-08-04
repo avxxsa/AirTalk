@@ -13,7 +13,7 @@ export const openDB = () => {
       }
 
       if (db.objectStoreNames.contains("messages")) {
-        db.deleteObjectStore("messages"); // 🔁 force clean corrupted stores
+        db.deleteObjectStore("messages"); // force clean corrupted stores
       }
       const msgStore = db.createObjectStore("messages", { keyPath: "id", autoIncrement: true });
       msgStore.createIndex("roomId", "roomId", { unique: false });
