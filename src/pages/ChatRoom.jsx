@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
-import { storeMessage, getMessagesByRoom } from "../utils/db"; // ✅ import IndexedDB helpers
+import { storeMessage, getMessagesByRoom } from "../utils/db";
 
 const ChatRoom = () => {
   const { id } = useParams();
@@ -26,13 +26,17 @@ const ChatRoom = () => {
     { id: "dark", name: "Dark Mode", class: "bg-gradient-to-b from-gray-800 to-gray-900" },
   ];
 
-  // Load messages from IndexedDB
   useEffect(() => {
     const loadMessages = async () => {
-      const saved = await getMessagesByRoom(id);
-      if (saved.length) {
-        setMessages(saved);
-      } else {
+      try {
+        const saved = await getMessagesByRoom(id);
+        if (Array.isArray(saved) && saved.length > 0) {
+          setMessages(saved);
+        } else {
+          throw new Error("No saved messages");
+        }
+      } catch (err) {
+        console.warn("⚠️ Failed to load chat history, seeding fallback messages.", err);
         const initialMessages = [
           {
             id: "1",
@@ -80,13 +84,16 @@ const ChatRoom = () => {
     setMessages(prev => [...prev, newMessage]);
     setMessageInput("");
 
-    //  Save to IndexedDB
-    await storeMessage({
-      roomId: id,
-      sender: newMessage.sender,
-      content: newMessage.content,
-      timestamp: newMessage.timestamp,
-    });
+    try {
+      await storeMessage({
+        roomId: id,
+        sender: newMessage.sender,
+        content: newMessage.content,
+        timestamp: newMessage.timestamp,
+      });
+    } catch (err) {
+      console.error("❌ Failed to store message:", err);
+    }
   };
 
   const formatTime = (date) => new Date(date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -99,7 +106,6 @@ const ChatRoom = () => {
 
       <main className="flex-grow pt-20">
         <div className="container mx-auto px-0 md:px-6 h-[calc(100vh-64px-80px)] flex flex-col">
-          {/* Header */}
           <div className="bg-white border-b border-gray-200 p-4 flex justify-between items-center sticky top-16 z-10">
             <h1 className="text-xl font-medium text-gray-800">{chattingWith}</h1>
             <button
@@ -111,7 +117,6 @@ const ChatRoom = () => {
             </button>
           </div>
 
-          {/* Background Customization */}
           {showCustomization && (
             <div className="bg-white border-b border-gray-200 p-4">
               <h3 className="text-sm font-medium text-gray-700 mb-3">Chat Background</h3>
@@ -133,7 +138,6 @@ const ChatRoom = () => {
             </div>
           )}
 
-          {/* Chat Area */}
           <div className={`flex-1 overflow-y-auto p-4 space-y-4 flex flex-col justify-end ${getCurrentBackgroundClass()} scroll-smooth`}>
             {messages.map((msg) => (
               <div key={msg.id} className={`flex ${msg.isCurrentUser ? "justify-end" : "justify-start"}`}>
@@ -156,7 +160,6 @@ const ChatRoom = () => {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Message Input */}
           <div className="bg-white border-t border-gray-200 p-4">
             <form onSubmit={handleSendMessage} className="flex items-center">
               <input
