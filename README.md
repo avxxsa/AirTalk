@@ -26,11 +26,9 @@ This project directly applies concepts from:
 
 ## 🎯 Objectives
 
-- Enable **offline communication📳** over KU Wi-Fi
+- Enable **offline communication📳** 
 - Develop **decentralized messaging** without server dependency
-- Implement **chatrooms** for academic/social collaboration
 - Store messages **locally** using IndexedDB with privacy focus
-- Introduce KU-specific **campus mesh communication**
 
 ---
 
@@ -41,7 +39,6 @@ This project directly applies concepts from:
 
 - Node.js ≥ 18
 - Modern browser (Chrome, Firefox, Edge)
-- KU Wi-Fi enabled (for offline testing)
 
 ### Setup Steps
 
