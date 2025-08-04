@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/authcontext'; // ✅ auth context
+import { useAuth } from '../context/authcontext'; // auth context
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth(); // ✅ use auth values
+  const { user, logout } = useAuth(); // use auth values
 
   const isActive = (path) => location.pathname === path;
 
