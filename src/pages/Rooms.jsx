@@ -24,6 +24,8 @@ const Rooms = () => {
 
   const inputRef = useRef();
 
+  const getRoomId = (a, b) => [a, b].sort().join('-');
+
   const handleConnect = () => {
     if (!username.trim()) return;
 
@@ -36,7 +38,7 @@ const Rooms = () => {
     socketRef.current = socket;
 
     socket.onopen = () => {
-      console.log(" WebSocket connected");
+      console.log("WebSocket connected");
       socket.send(JSON.stringify({ type: 'register', username }));
       setConnected(true);
       localStorage.setItem("airtalk-username", username);
@@ -97,32 +99,42 @@ const Rooms = () => {
       setCurrentChat(user);
       localStorage.setItem("currentChat", user);
 
-      const history = await getMessagesByRoom(user);
-      for (const msg of history) {
-        appendMessage(user, `${msg.sender}: ${msg.content}`);
+      const roomId = getRoomId(username, user);
+      try {
+        const history = await getMessagesByRoom(roomId);
+        if (Array.isArray(history)) {
+          for (const msg of history) {
+            appendMessage(user, `${msg.sender}: ${msg.content}`);
+          }
+        } else {
+          appendMessage(user, "[System] Failed to load previous messages.");
+        }
+      } catch (err) {
+        appendMessage(user, "[System] Error loading message history.");
       }
 
       appendMessage(user, `[System]: Connected to ${user}`);
 
-      const pending = await getPendingMessages(user);
+      const pending = await getPendingMessages(roomId);
       for (const msg of pending) {
         channel.send(msg.content);
         appendMessage(user, `You (sent later): ${msg.content}`);
       }
 
       if (pending.length > 0) {
-        await clearPendingMessages(user);
+        await clearPendingMessages(roomId);
       }
     };
 
     channel.onmessage = async (e) => {
       setCurrentChat(user);
       localStorage.setItem("currentChat", user);
+      const roomId = getRoomId(username, user);
 
       appendMessage(user, `${user}: ${e.data}`);
 
       await storeMessage({
-        roomId: user,
+        roomId,
         sender: user,
         content: e.data,
         timestamp: new Date()
@@ -166,14 +178,16 @@ const Rooms = () => {
       const channel = dataChannels.current[currentChat];
       appendMessage(currentChat, `You: ${message}`);
 
+      const roomId = getRoomId(username, currentChat);
+
       if (channel?.readyState === 'open') {
         channel.send(message);
       } else {
-        await queuePendingMessage({ roomId: currentChat, content: message });
+        await queuePendingMessage({ roomId, content: message });
       }
 
       await storeMessage({
-        roomId: currentChat,
+        roomId,
         sender: username,
         content: message,
         timestamp: new Date()
@@ -197,7 +211,7 @@ const Rooms = () => {
     }
   }, []);
 
-  return (
+   return (
     <div className="bg-white text-gray-800 min-h-screen flex flex-col">
       <Navbar />
 
@@ -242,22 +256,22 @@ const Rooms = () => {
             {Object.keys(dataChannels.current).map(user => (
               <div
                 key={user}
-                className={`cursor-pointer px-4 py-2 border border-gray-300 mr-2 rounded-t ${
-                  currentChat === user ? 'bg-gray-200 font-bold' : ''
-                }`}
-                onClick={() => {
-                  (async () => {
-                    setCurrentChat(user);
-                    localStorage.setItem("currentChat", user);
+                className={`cursor-pointer px-4 py-2 border border-gray-300 mr-2 rounded-t ${currentChat === user ? 'bg-gray-200 font-bold' : ''}`}
+                onClick={async () => {
+                  setCurrentChat(user);
+                  localStorage.setItem("currentChat", user);
 
-                    const container = chatContainersRef.current[user];
-                    if (container && container.childElementCount === 0) {
+                  const container = chatContainersRef.current[user];
+                  if (container && container.childElementCount === 0) {
+                    try {
                       const history = await getMessagesByRoom(user);
                       history.forEach(msg => {
                         appendMessage(user, `${msg.sender}: ${msg.content}`);
                       });
+                    } catch {
+                      appendMessage(user, "[System] Error loading chat history.");
                     }
-                  })();
+                  }
                 }}
               >
                 {user}
@@ -266,26 +280,23 @@ const Rooms = () => {
           </div>
 
           <div id="chatContainers" className="mb-4">
-            {Object.keys(dataChannels.current)
-              .concat(currentChat || [])
-              .filter((v, i, a) => a.indexOf(v) === i)
-              .map(user => (
-                <div
-                  key={user}
-                  className="chatWindow"
-                  ref={el => (chatContainersRef.current[user] = el)}
-                  style={{
-                    display: currentChat === user ? 'block' : 'none',
-                    height: '300px',
-                    overflowY: 'auto',
-                    border: '1px solid #ccc',
-                    padding: '10px',
-                    marginBottom: '1rem',
-                    background: '#fafafa',
-                    borderRadius: '4px'
-                  }}
-                />
-              ))}
+            {[...new Set([...Object.keys(dataChannels.current), currentChat])].filter(Boolean).map(user => (
+              <div
+                key={user}
+                className="chatWindow"
+                ref={el => (chatContainersRef.current[user] = el)}
+                style={{
+                  display: currentChat === user ? 'block' : 'none',
+                  height: '300px',
+                  overflowY: 'auto',
+                  border: '1px solid #ccc',
+                  padding: '10px',
+                  marginBottom: '1rem',
+                  background: '#fafafa',
+                  borderRadius: '4px'
+                }}
+              />
+            ))}
           </div>
 
           <input
@@ -307,3 +318,4 @@ const Rooms = () => {
 };
 
 export default Rooms;
+
