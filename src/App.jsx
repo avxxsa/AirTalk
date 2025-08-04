@@ -20,7 +20,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         
-        {/* ✅ Private chat routing */}
+        {/* Private chat routing */}
         <Route
           path="/rooms"
           element={
