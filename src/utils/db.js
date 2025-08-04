@@ -1,5 +1,5 @@
 const dbName = "AirTalkDB";
-const dbVersion = 4; // 🔁 bump version to force upgrade
+const dbVersion = 4; // bump version to force upgrade
 
 export const openDB = () => {
   return new Promise((resolve, reject) => {
@@ -40,16 +40,16 @@ export const addUserToIDB = async (user) => {
 
     return new Promise((resolve, reject) => {
       tx.oncomplete = () => {
-        console.log("✅ User added to IndexedDB:", user);
+        console.log("User added to IndexedDB:", user);
         resolve(true);
       };
       tx.onerror = (event) => {
-        console.error("❌ Failed to add user:", event.target.error);
+        console.error(" Failed to add user:", event.target.error);
         reject(event.target.error);
       };
     });
   } catch (error) {
-    console.error("❌ Failed to add user to IndexedDB:", error);
+    console.error("Failed to add user to IndexedDB:", error);
   }
 };
 
@@ -65,7 +65,7 @@ export const getUserFromIDB = async (email) => {
       request.onerror = () => reject("Failed to get user");
     });
   } catch (error) {
-    console.error("❌ Failed to get user from IndexedDB:", error);
+    console.error(" Failed to get user from IndexedDB:", error);
     return null;
   }
 };
@@ -77,7 +77,7 @@ export const clearUsersFromIDB = async () => {
     await tx.objectStore("users").clear();
     await tx.done;
   } catch (error) {
-    console.error("❌ Failed to clear users from IndexedDB:", error);
+    console.error("Failed to clear users from IndexedDB:", error);
   }
 };
 
@@ -85,9 +85,9 @@ export const initDB = async () => {
   try {
     console.log("IndexedDB init triggered");
     await openDB();
-    console.log("✅ IndexedDB initialized");
+    console.log("IndexedDB initialized");
   } catch (err) {
-    console.error("❌ Failed to initialize IndexedDB:", err);
+    console.error(" Failed to initialize IndexedDB:", err);
   }
 };
 
@@ -98,7 +98,7 @@ export const storeMessage = async ({ roomId, sender, content, timestamp }) => {
     const store = tx.objectStore("messages");
 
     store.add({
-      id: Date.now(), // 🔁 explicit id to avoid DataError
+      id: Date.now(), // explicit id to avoid DataError
       roomId,
       sender,
       content,
@@ -107,16 +107,16 @@ export const storeMessage = async ({ roomId, sender, content, timestamp }) => {
 
     return new Promise((resolve, reject) => {
       tx.oncomplete = () => {
-        console.log("💾 Message stored:", { roomId, sender, content });
+        console.log(" Message stored:", { roomId, sender, content });
         resolve(true);
       };
       tx.onerror = (e) => {
-        console.error("❌ Failed to store message:", e.target.error);
+        console.error(" Failed to store message:", e.target.error);
         reject(e.target.error);
       };
     });
   } catch (err) {
-    console.error("❌ Error in storeMessage:", err);
+    console.error("Error in storeMessage:", err);
     return false;
   }
 };
@@ -128,7 +128,7 @@ export const getMessagesByRoom = async (roomId) => {
     const store = tx.objectStore("messages");
 
     if (!store.indexNames.contains("roomId")) {
-      console.error("❌ roomId index not found in messages store");
+      console.error("roomId index not found in messages store");
       return [];
     }
 
@@ -145,7 +145,7 @@ export const getMessagesByRoom = async (roomId) => {
       request.onerror = () => reject("Failed to get messages");
     });
   } catch (err) {
-    console.error("❌ Error in getMessagesByRoom:", err);
+    console.error(" Error in getMessagesByRoom:", err);
     return [];
   }
 };
@@ -167,7 +167,7 @@ export const getPendingMessages = async (roomId) => {
   const store = tx.objectStore("pending");
 
   if (!store.indexNames.contains("roomId")) {
-    console.error("❌ roomId index missing in pending store");
+    console.error("roomId index missing in pending store");
     return [];
   }
 
@@ -185,7 +185,7 @@ export const clearPendingMessages = async (roomId) => {
   const store = tx.objectStore("pending");
 
   if (!store.indexNames.contains("roomId")) {
-    console.warn("⚠️ No roomId index in pending store, skipping clear.");
+    console.warn("No roomId index in pending store, skipping clear.");
     return;
   }
 
